@@ -66,6 +66,19 @@ export async function createCourse(name: string, holes: HoleData[]): Promise<Cou
   })
 }
 
+export async function deleteCourse(id: string): Promise<boolean> {
+  try {
+    // Prisma will cascade delete holes and rounds due to onDelete: Cascade in schema
+    await prisma.course.delete({
+      where: { id },
+    })
+    return true
+  } catch (error) {
+    console.error('Failed to delete course:', error)
+    return false
+  }
+}
+
 // Round functions
 export async function getRounds(activeOnly: boolean = false): Promise<RoundWithDetails[]> {
   return prisma.round.findMany({

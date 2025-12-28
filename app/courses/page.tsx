@@ -33,6 +33,8 @@ export default function CoursesPage() {
   const [apiSearchResults, setApiSearchResults] = useState<ApiCourse[]>([])
   const [apiSearchLoading, setApiSearchLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [numberOfHoles, setNumberOfHoles] = useState<9 | 18>(18)
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     holes: Array.from({ length: 18 }, (_, i) => ({
@@ -92,6 +94,7 @@ export default function CoursesPage() {
 
       if (response.ok) {
         setShowForm(false)
+        setNumberOfHoles(18) // Reset to default
         setFormData({
           name: '',
           holes: Array.from({ length: 18 }, (_, i) => ({
@@ -149,6 +152,32 @@ export default function CoursesPage() {
       }
     } catch (error) {
       console.error('Failed to import course:', error)
+    }
+  }
+
+  const handleDeleteCourse = async (courseId: string, courseName: string) => {
+    if (!confirm(`Are you sure you want to delete "${courseName}"? This will also delete all rounds associated with this course. This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingCourseId(courseId)
+    try {
+      const response = await fetch(`/api/courses/${courseId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        loadCourses()
+      } else {
+        const data = await response.json()
+        alert(`Failed to delete course: ${data.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete course:', error)
+      alert('Failed to delete course. Please try again.')
+    } finally {
+      setDeletingCourseId(null)
     }
   }
 
@@ -315,10 +344,64 @@ export default function CoursesPage() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Number of Holes
+                </label>
+                <div className="flex gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (numberOfHoles !== 9) {
+                        setNumberOfHoles(9)
+                        setFormData({
+                          ...formData,
+                          holes: Array.from({ length: 9 }, (_, i) => ({
+                            number: i + 1,
+                            par: 4,
+                            yardage: 0,
+                          })),
+                        })
+                      }
+                    }}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      numberOfHoles === 9
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    9 Holes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (numberOfHoles !== 18) {
+                        setNumberOfHoles(18)
+                        setFormData({
+                          ...formData,
+                          holes: Array.from({ length: 18 }, (_, i) => ({
+                            number: i + 1,
+                            par: 4,
+                            yardage: 0,
+                          })),
+                        })
+                      }
+                    }}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      numberOfHoles === 18
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    18 Holes
+                  </button>
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                   Holes Configuration
                 </label>
-                <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-9 gap-4">
+                <div className={`grid gap-4 ${numberOfHoles === 9 ? 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9' : 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9'}`}>
                   {formData.holes.map((hole, index) => (
                     <div key={index} className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
@@ -382,7 +465,7 @@ export default function CoursesPage() {
                   .map((course) => (
                     <div
                       key={course.id}
-                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all"
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
                     >
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                         {course.name}
@@ -406,12 +489,21 @@ export default function CoursesPage() {
                           </div>
                         )}
                       </div>
-                      <Link
-                        href={`/rounds/new?courseId=${course.id}`}
-                        className="text-green-600 dark:text-green-400 font-semibold hover:underline"
-                      >
-                        Start Round →
-                      </Link>
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={`/rounds/new?courseId=${course.id}`}
+                          className="text-green-600 dark:text-green-400 font-semibold hover:underline"
+                        >
+                          Start Round →
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteCourse(course.id, course.name)}
+                          disabled={deletingCourseId === course.id}
+                          className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingCourseId === course.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                   ))}
               </div>
