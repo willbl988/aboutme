@@ -15,9 +15,14 @@ export default function Navigation() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (pathname !== '/login') {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && pathname !== '/login') {
       fetch('/api/auth/me', {
         credentials: 'include',
       })
@@ -33,7 +38,7 @@ export default function Navigation() {
           // Silently fail - let individual pages handle auth
         })
     }
-  }, [pathname, router])
+  }, [mounted, pathname, router])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { 
@@ -57,7 +62,7 @@ export default function Navigation() {
     return pathname?.startsWith(href)
   }
 
-  if (pathname === '/login') {
+  if (!mounted || pathname === '/login') {
     return null
   }
 
