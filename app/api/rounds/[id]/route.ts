@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getRound, updateScore, completeRound } from '../../../../../lib/golf-data-db'
+import { getRound, updateScore, completeRound } from '@/lib/golf-data-db'
 
 export async function GET(
   request: NextRequest,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCourses, createCourse } from '../../../../lib/golf-data-db'
+import { getCourses, createCourse } from '@/lib/golf-data-db'
 
 export async function GET() {
   try {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserBySession } from '../../../../lib/auth-db'
+import { getUserBySession } from '@/lib/auth-db'
 
 export async function GET(request: NextRequest) {
   try {

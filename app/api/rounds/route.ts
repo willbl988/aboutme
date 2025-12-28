@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getRounds, createRound } from '../../../../lib/golf-data-db'
-import { getUserBySession } from '../../../../lib/auth-db'
+import { getRounds, createRound } from '@/lib/golf-data-db'
+import { getUserBySession } from '@/lib/auth-db'
 
 export async function GET(request: NextRequest) {
   try {
