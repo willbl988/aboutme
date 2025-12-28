@@ -11,11 +11,27 @@ interface Course {
   createdAt: string
 }
 
+interface ApiCourse {
+  id: string
+  name: string
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  holes: Array<{ number: number; par: number; yardage: number }>
+  totalYardage?: number
+  totalPar?: number
+}
+
 export default function CoursesPage() {
   const router = useRouter()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [showApiSearch, setShowApiSearch] = useState(false)
+  const [apiSearchQuery, setApiSearchQuery] = useState('')
+  const [apiSearchResults, setApiSearchResults] = useState<ApiCourse[]>([])
+  const [apiSearchLoading, setApiSearchLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: '',
@@ -91,6 +107,51 @@ export default function CoursesPage() {
     }
   }
 
+  const searchApiCourses = async () => {
+    if (!apiSearchQuery.trim()) return
+
+    setApiSearchLoading(true)
+    try {
+      const response = await fetch(`/api/courses/search?q=${encodeURIComponent(apiSearchQuery)}`, {
+        credentials: 'include',
+      })
+      const data = await response.json()
+      setApiSearchResults(data.courses || [])
+    } catch (error) {
+      console.error('Failed to search courses:', error)
+      setApiSearchResults([])
+    } finally {
+      setApiSearchLoading(false)
+    }
+  }
+
+  const importCourse = async (apiCourse: ApiCourse) => {
+    try {
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: apiCourse.name,
+          holes: apiCourse.holes.map((hole) => ({
+            number: hole.number,
+            par: hole.par,
+            yardage: hole.yardage,
+          })),
+        }),
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        setShowApiSearch(false)
+        setApiSearchQuery('')
+        setApiSearchResults([])
+        loadCourses()
+      }
+    } catch (error) {
+      console.error('Failed to import course:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
@@ -106,13 +167,134 @@ export default function CoursesPage() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
             Courses
           </h1>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto"
-          >
-            {showForm ? 'Cancel' : '+ Add Course'}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                setShowApiSearch(!showApiSearch)
+                setShowForm(false)
+              }}
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm sm:text-base w-full sm:w-auto"
+            >
+              {showApiSearch ? 'Cancel' : '🔍 Search Courses'}
+            </button>
+            <button
+              onClick={() => {
+                setShowForm(!showForm)
+                setShowApiSearch(false)
+              }}
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto"
+            >
+              {showForm ? 'Cancel' : '+ Add Course'}
+            </button>
+          </div>
         </div>
+
+        {showApiSearch && (
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Search Courses</h2>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={apiSearchQuery}
+                  onChange={(e) => setApiSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchApiCourses()}
+                  placeholder="Search by course name, city, or location..."
+                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+                <button
+                  onClick={searchApiCourses}
+                  disabled={apiSearchLoading || !apiSearchQuery.trim()}
+                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {apiSearchLoading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+
+              {apiSearchResults.length > 0 && (
+                <div className="space-y-4 mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Found {apiSearchResults.length} course(s)
+                  </h3>
+                  {apiSearchResults.map((course) => (
+                    <div
+                      key={course.id}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                            {course.name}
+                          </h4>
+                          {(course.city || course.state) && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {[course.city, course.state, course.country].filter(Boolean).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => importCourse(course)}
+                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all text-sm"
+                        >
+                          Import
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-sm mb-2">
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Holes:</span>
+                          <span className="ml-2 font-semibold text-gray-900 dark:text-white">
+                            {course.holes.length}
+                          </span>
+                        </div>
+                        {course.totalPar && course.totalPar > 0 ? (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Par:</span>
+                            <span className="ml-2 font-semibold text-gray-900 dark:text-white">
+                              {course.totalPar}
+                            </span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Par:</span>
+                            <span className="ml-2 font-semibold text-gray-500 dark:text-gray-500">
+                              N/A
+                            </span>
+                          </div>
+                        )}
+                        {course.totalYardage && course.totalYardage > 0 ? (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Yardage:</span>
+                            <span className="ml-2 font-semibold text-gray-900 dark:text-white">
+                              {course.totalYardage.toLocaleString()} yds
+                            </span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="text-gray-600 dark:text-gray-400">Yardage:</span>
+                            <span className="ml-2 font-semibold text-gray-500 dark:text-gray-500">
+                              N/A
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {(!course.totalYardage || course.totalYardage === 0) && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                          ⚠️ This course may not have complete hole details. You can edit after importing.
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {apiSearchQuery && !apiSearchLoading && apiSearchResults.length === 0 && (
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+                  No courses found. Try a different search term.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {showForm && (
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
@@ -202,12 +384,28 @@ export default function CoursesPage() {
                       key={course.id}
                       className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all"
                     >
-                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                         {course.name}
                       </h2>
-                      <p className="text-gray-600 dark:text-gray-300 mb-4">
-                        {course.holes.length} holes
-                      </p>
+                      <div className="space-y-2 mb-4">
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {course.holes.length} holes
+                        </p>
+                        {course.holes.length > 0 && course.holes[0].yardage && (
+                          <div className="flex flex-wrap gap-3 text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Par: <span className="font-semibold text-gray-900 dark:text-white">
+                                {course.holes.reduce((sum, hole) => sum + hole.par, 0)}
+                              </span>
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Total: <span className="font-semibold text-gray-900 dark:text-white">
+                                {course.holes.reduce((sum, hole) => sum + (hole.yardage || 0), 0).toLocaleString()} yds
+                              </span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <Link
                         href={`/rounds/new?courseId=${course.id}`}
                         className="text-green-600 dark:text-green-400 font-semibold hover:underline"
