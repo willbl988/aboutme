@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // Hashed password
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  sessions  Session[]
+  rounds    Round[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Course {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  holes     Hole[]
+  rounds    Round[]
+}
+
+model Hole {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  number    Int
+  par       Int
+  yardage   Int?
+  createdAt DateTime @default(now())
+  
+  @@unique([courseId, number])
+  @@index([courseId])
+}
+
+model Round {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy User     @relation(fields: [createdById], references: [id])
+  status    String   @default("active") // "active" or "completed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  players   RoundPlayer[]
+  scores    Score[]
+}
+
+model RoundPlayer {
+  id       String @id @default(cuid())
+  roundId String
+  round    Round  @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  name     String
+  
+  scores   Score[]
+  
+  @@index([roundId])
+}
+
+model Score {
+  id            String       @id @default(cuid())
+  roundId       String
+  round         Round        @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  playerId      String
+  player        RoundPlayer  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  holeNumber    Int
+  score         Int
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  @@unique([roundId, playerId, holeNumber])
+  @@index([roundId, playerId])
+}
+
