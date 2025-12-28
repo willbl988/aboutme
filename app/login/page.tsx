@@ -139,11 +139,12 @@ export default function LoginPage() {
                 Don't have an account?{' '}
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault()
                     setIsSignUp(true)
                     setError('')
                   }}
-                  className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline"
+                  className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline cursor-pointer"
                 >
                   Sign Up
                 </button>
@@ -157,12 +158,13 @@ export default function LoginPage() {
                 Already have an account?{' '}
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault()
                     setIsSignUp(false)
                     setError('')
                     setName('')
                   }}
-                  className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline"
+                  className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline cursor-pointer"
                 >
                   Sign In
                 </button>
