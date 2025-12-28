@@ -61,39 +61,6 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Toggle between Sign In and Sign Up */}
-          <div className="flex items-center justify-center mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignUp(false)
-                setError('')
-                setName('')
-              }}
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg transition-colors ${
-                !isSignUp
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsSignUp(true)
-                setError('')
-              }}
-              className={`px-4 py-2 text-sm font-medium rounded-r-lg transition-colors ${
-                isSignUp
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-600 dark:text-red-400 text-sm">
@@ -165,6 +132,43 @@ export default function LoginPage() {
               }
             </button>
           </form>
+
+          {!isSignUp && (
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(true)
+                    setError('')
+                  }}
+                  className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline"
+                >
+                  Sign Up
+                </button>
+              </p>
+            </div>
+          )}
+
+          {isSignUp && (
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(false)
+                    setError('')
+                    setName('')
+                  }}
+                  className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium underline"
+                >
+                  Sign In
+                </button>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
