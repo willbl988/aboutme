@@ -79,7 +79,10 @@ function convertGolfCourseAPICourse(apiCourse: any): CourseApiResult | null {
     const tees = apiCourse.tees || {}
     const maleTees = tees.male?.[0] || tees.Male?.[0]
     const femaleTees = tees.female?.[0] || tees.Female?.[0]
-    const anyTees = maleTees || femaleTees || Object.values(tees)[0]?.[0]
+    // Get first available tee set from any property
+    const teesValues = Object.values(tees) as any[]
+    const firstTeeArray = teesValues.find((val) => Array.isArray(val) && val.length > 0) as any[] | undefined
+    const anyTees = maleTees || femaleTees || firstTeeArray?.[0]
 
     if (anyTees && anyTees.holes && Array.isArray(anyTees.holes) && anyTees.holes.length > 0) {
       holes = anyTees.holes.map((hole: any, index: number) => ({
