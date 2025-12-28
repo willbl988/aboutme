@@ -19,6 +19,16 @@ export default function Home() {
     checkAuth()
   }, [])
 
+  useEffect(() => {
+    // Redirect to login if no user after loading completes
+    if (!loading && !user) {
+      const timer = setTimeout(() => {
+        window.location.href = '/login'
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, user])
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/me', {
@@ -33,15 +43,10 @@ export default function Home() {
       const data = await response.json()
       if (data.user) {
         setUser(data.user)
-      } else {
-        // No user found - redirect to login
-        router.push('/login')
       }
+      setLoading(false)
     } catch (error) {
       console.error('Auth check error:', error)
-      // On error, still try to redirect to login
-      router.push('/login')
-    } finally {
       setLoading(false)
     }
   }
@@ -58,7 +63,7 @@ export default function Home() {
   }
 
   // Don't render content if no user (redirecting to login)
-  if (!user) {
+  if (!user && !loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
         <div className="text-center">
@@ -127,6 +132,22 @@ export default function Home() {
             </p>
             <span className="text-green-600 dark:text-green-400 font-semibold">
               Start round →
+            </span>
+          </Link>
+
+          <Link
+            href="/statistics"
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+          >
+            <div className="text-4xl mb-4">📈</div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Statistics
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              View your round history and performance statistics.
+            </p>
+            <span className="text-green-600 dark:text-green-400 font-semibold">
+              View stats →
             </span>
           </Link>
         </div>

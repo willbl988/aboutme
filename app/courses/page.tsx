@@ -16,6 +16,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     holes: Array.from({ length: 18 }, (_, i) => ({
@@ -174,27 +175,50 @@ export default function CoursesPage() {
             <p className="text-gray-600 dark:text-gray-400 text-lg">No courses yet. Create your first course to get started!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all"
-              >
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                  {course.name}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {course.holes.length} holes
-                </p>
-                <Link
-                  href={`/rounds/new?courseId=${course.id}`}
-                  className="text-green-600 dark:text-green-400 font-semibold hover:underline"
-                >
-                  Start Round →
-                </Link>
+          <>
+            <div className="mb-6">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search courses..."
+                className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            {courses.filter((course) =>
+              course.name.toLowerCase().includes(searchQuery.toLowerCase())
+            ).length === 0 ? (
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
+                <p className="text-gray-600 dark:text-gray-400 text-lg">No courses found matching your search.</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses
+                  .filter((course) =>
+                    course.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((course) => (
+                    <div
+                      key={course.id}
+                      className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all"
+                    >
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                        {course.name}
+                      </h2>
+                      <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        {course.holes.length} holes
+                      </p>
+                      <Link
+                        href={`/rounds/new?courseId=${course.id}`}
+                        className="text-green-600 dark:text-green-400 font-semibold hover:underline"
+                      >
+                        Start Round →
+                      </Link>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
