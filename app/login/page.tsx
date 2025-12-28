@@ -47,7 +47,7 @@ export default function LoginPage() {
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-              Golf Tracker
+              Golf Budz
             </h1>
             <p className="text-gray-600 dark:text-gray-400">Sign in to track your rounds</p>
           </div>

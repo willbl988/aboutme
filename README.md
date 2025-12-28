@@ -1,4 +1,4 @@
-# Golf Tracker
+# Golf Budz
 
 A modern, real-time golf round tracking application built with Next.js, React, Tailwind CSS, and PostgreSQL. Track scores for multiple players simultaneously during a round.
 
