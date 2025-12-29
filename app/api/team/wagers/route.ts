@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         userId: user.id,
       },
       include: {
-        team: {
+        Team: {
           include: {
             Owner: {
               select: {
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
     // Combine team members from both directions
     const directMembers = team?.Members.map(m => ({ userId: m.userId, name: m.User.name })) || []
     const reverseMembers = usersWhoAddedMe
-      .filter(tm => tm.team.ownerId !== user.id)
-      .map(tm => ({ userId: tm.team.ownerId, name: tm.team.Owner.name }))
+      .filter(tm => tm.Team.ownerId !== user.id)
+      .map(tm => ({ userId: tm.Team.ownerId, name: tm.Team.Owner.name }))
     
     // Deduplicate
     const allMembersMap = new Map<string, { userId: string; name: string }>()
