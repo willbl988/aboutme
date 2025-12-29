@@ -206,15 +206,15 @@ function NewRoundContent() {
 
             <div className="space-y-4">
               {players.map((player, index) => (
-                <div key={player.id} className="flex gap-4 items-center">
+                <div key={player.id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
                   <input
                     type="text"
                     value={player.name}
                     onChange={(e) => updatePlayerName(player.id, e.target.value)}
                     placeholder={`Player ${index + 1} name`}
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="flex-1 w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 sm:gap-2">
                     <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                       Mulligans:
                     </label>
@@ -224,14 +224,14 @@ function NewRoundContent() {
                       max="18"
                       value={player.mulligansAllowed || 0}
                       onChange={(e) => updatePlayerMulligans(player.id, parseInt(e.target.value) || 0)}
-                      className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     />
                   </div>
                   {players.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removePlayer(player.id)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm sm:text-base w-full sm:w-auto"
                     >
                       Remove
                     </button>
