@@ -44,10 +44,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ teeTimes: results })
   } catch (error: any) {
     console.error('[Tee Times Search] Error:', error)
+    console.error('[Tee Times Search] Error details:', {
+      message: error?.message,
+      code: error?.code,
+      stack: error?.stack,
+    })
+    
+    // Check if it's a migration error
+    const isMigrationError = error?.message?.includes('migration') || 
+                            error?.message?.includes('TeeTime') ||
+                            error?.message?.includes('does not exist')
+    
     return NextResponse.json(
       { 
-        error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+        error: isMigrationError ? 'Database migration required' : 'Internal server error',
+        details: error?.message || (process.env.NODE_ENV === 'development' ? error?.stack : undefined),
       },
       { status: 500 }
     )
