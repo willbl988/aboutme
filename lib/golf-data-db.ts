@@ -181,8 +181,10 @@ export async function createCourse(
   holes: HoleData[],
   courseData?: Partial<CourseData>
 ): Promise<CourseWithHoles> {
-  return prisma.course.create({
-    data: {
+  try {
+    // Build the data object, only including rating/slope if they're defined
+    // This allows the code to work even if the migration hasn't been run yet
+    const data: any = {
       name,
       address: courseData?.address,
       city: courseData?.city,
@@ -192,8 +194,6 @@ export async function createCourse(
       website: courseData?.website,
       latitude: courseData?.latitude,
       longitude: courseData?.longitude,
-      rating: courseData?.rating,
-      slope: courseData?.slope,
       Hole: {
         create: holes.map((hole) => ({
           number: hole.number,
@@ -201,13 +201,73 @@ export async function createCourse(
           yardage: hole.yardage,
         })),
       },
-    },
-    include: {
-      Hole: {
-        orderBy: { number: 'asc' },
+    }
+
+    // Only add rating/slope if they're defined (and not NaN)
+    if (courseData?.rating !== undefined && courseData?.rating !== null && !isNaN(courseData.rating)) {
+      data.rating = courseData.rating
+    }
+    if (courseData?.slope !== undefined && courseData?.slope !== null && !isNaN(courseData.slope)) {
+      data.slope = courseData.slope
+    }
+
+    return await prisma.course.create({
+      data,
+      include: {
+        Hole: {
+          orderBy: { number: 'asc' },
+        },
       },
-    },
-  })
+    })
+  } catch (error: any) {
+    console.error('[createCourse] Error creating course:', error)
+    console.error('[createCourse] Error message:', error?.message)
+    console.error('[createCourse] Error code:', error?.code)
+    
+    // If the error is about missing columns (rating/slope), try again without them
+    // This can happen if the database migration hasn't been run yet
+    const errorMessage = error?.message?.toLowerCase() || ''
+    const isColumnError = errorMessage.includes('column') && 
+                         (errorMessage.includes('rating') || errorMessage.includes('slope')) ||
+                         error?.code === 'P2001' ||
+                         error?.code === 'P2011' ||
+                         error?.code === 'P2012'
+    
+    if (isColumnError) {
+      console.log('[createCourse] Retrying without rating/slope fields (migration may not be applied)')
+      try {
+        return await prisma.course.create({
+          data: {
+            name,
+            address: courseData?.address,
+            city: courseData?.city,
+            state: courseData?.state,
+            country: courseData?.country,
+            phone: courseData?.phone,
+            website: courseData?.website,
+            latitude: courseData?.latitude,
+            longitude: courseData?.longitude,
+            Hole: {
+              create: holes.map((hole) => ({
+                number: hole.number,
+                par: hole.par,
+                yardage: hole.yardage,
+              })),
+            },
+          },
+          include: {
+            Hole: {
+              orderBy: { number: 'asc' },
+            },
+          },
+        })
+      } catch (retryError: any) {
+        console.error('[createCourse] Retry also failed:', retryError)
+        throw retryError
+      }
+    }
+    throw error
+  }
 }
 
 export async function deleteCourse(id: string): Promise<boolean> {

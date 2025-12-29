@@ -96,7 +96,7 @@ export default function Navigation() {
           </div>
           <div className="flex items-center gap-4">
             {user && (
-              <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-400">
+              <span className="hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {user.name}
               </span>
             )}

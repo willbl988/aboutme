@@ -383,8 +383,17 @@ export default function CoursesPage() {
     }
   }
 
+  const [importingCourseId, setImportingCourseId] = useState<string | null>(null)
+
   const importCourse = async (apiCourse: ApiCourse) => {
+    if (importingCourseId === apiCourse.id) {
+      return // Already importing this course
+    }
+
+    setImportingCourseId(apiCourse.id)
     try {
+      console.log('[importCourse] Importing course:', apiCourse.name)
+      
       const response = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -405,18 +414,35 @@ export default function CoursesPage() {
         credentials: 'include',
       })
 
-      if (response.ok) {
-        // Switch to "Your Courses" tab to show the newly imported course
-        setActiveTab('yours')
-        setApiSearchQuery('')
-        setApiSearchResults([])
-        setApiSearchPage(1)
-        setApiSearchTotal(0)
-        setApiSearchHasMore(false)
-        loadCourses()
+      console.log('[importCourse] Response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('[importCourse] Error response:', errorData)
+        alert(`Failed to import course: ${errorData.error || 'Unknown error'}`)
+        setImportingCourseId(null)
+        return
       }
+
+      const data = await response.json()
+      console.log('[importCourse] Course imported successfully:', data)
+
+      // Switch to "Your Courses" tab to show the newly imported course
+      setActiveTab('yours')
+      setApiSearchQuery('')
+      setApiSearchResults([])
+      setApiSearchPage(1)
+      setApiSearchTotal(0)
+      setApiSearchHasMore(false)
+      await loadCourses()
+      
+      // Show success message
+      alert(`Successfully imported "${apiCourse.name}"!`)
     } catch (error) {
-      console.error('Failed to import course:', error)
+      console.error('[importCourse] Failed to import course:', error)
+      alert(`Failed to import course: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setImportingCourseId(null)
     }
   }
 
@@ -500,7 +526,7 @@ export default function CoursesPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                   Course Name
                 </label>
                 <input
@@ -508,7 +534,7 @@ export default function CoursesPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   placeholder="Pebble Beach Golf Links"
                 />
               </div>
@@ -711,9 +737,10 @@ export default function CoursesPage() {
                         </div>
                         <button
                           onClick={() => importCourse(course)}
-                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all text-sm"
+                          disabled={importingCourseId === course.id}
+                          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Import
+                          {importingCourseId === course.id ? 'Importing...' : 'Import'}
                         </button>
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm mb-2">
@@ -796,11 +823,11 @@ export default function CoursesPage() {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">🔍</span>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                   Search Your Courses
                 </label>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
                 Filter your existing courses by name, city, state, or address
               </p>
               <input
@@ -808,7 +835,7 @@ export default function CoursesPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search your courses by name, city, state, or address..."
-                className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full md:w-96 px-4 py-3 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
