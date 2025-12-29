@@ -12,6 +12,7 @@ interface Course {
 interface Player {
   id: string
   name: string
+  mulligansAllowed?: number
 }
 
 function NewRoundContent() {
@@ -81,6 +82,10 @@ function NewRoundContent() {
 
   const updatePlayerName = (id: string, name: string) => {
     setPlayers(players.map(p => (p.id === id ? { ...p, name } : p)))
+  }
+
+  const updatePlayerMulligans = (id: string, mulligans: number) => {
+    setPlayers(players.map(p => (p.id === id ? { ...p, mulligansAllowed: mulligans } : p)))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,7 +178,7 @@ function NewRoundContent() {
 
             <div className="space-y-4">
               {players.map((player, index) => (
-                <div key={player.id} className="flex gap-4">
+                <div key={player.id} className="flex gap-4 items-center">
                   <input
                     type="text"
                     value={player.name}
@@ -181,6 +186,19 @@ function NewRoundContent() {
                     placeholder={`Player ${index + 1} name`}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                      Mulligans:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="18"
+                      value={player.mulligansAllowed || 0}
+                      onChange={(e) => updatePlayerMulligans(player.id, parseInt(e.target.value) || 0)}
+                      className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
                   {players.length > 1 && (
                     <button
                       type="button"

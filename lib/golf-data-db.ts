@@ -9,12 +9,14 @@ export interface RoundWithDetails extends Round {
   course: CourseWithHoles
   players: (RoundPlayer & {
     scores: Score[]
+    mulligans: { holeNumber: number }[]
   })[]
 }
 
 export interface Player {
   id: string
   name: string
+  mulligansAllowed?: number
 }
 
 export interface HoleData {
@@ -115,6 +117,11 @@ export async function getRound(id: string): Promise<RoundWithDetails | null> {
       players: {
         include: {
           scores: true,
+          mulligans: {
+            select: {
+              holeNumber: true,
+            },
+          },
         },
       },
     },
@@ -148,6 +155,7 @@ export async function createRound(
       players: {
         create: players.map((player) => ({
           name: player.name,
+          mulligansAllowed: player.mulligansAllowed || 0,
         })),
       },
     },
@@ -162,6 +170,11 @@ export async function createRound(
       players: {
         include: {
           scores: true,
+          mulligans: {
+            select: {
+              holeNumber: true,
+            },
+          },
         },
       },
     },
@@ -217,13 +230,58 @@ export async function completeRound(roundId: string): Promise<boolean> {
 
 export async function deleteRound(id: string): Promise<boolean> {
   try {
-    // Prisma will cascade delete players and scores due to onDelete: Cascade in schema
+    // Prisma will cascade delete players, scores, and mulligans due to onDelete: Cascade in schema
     await prisma.round.delete({
       where: { id },
     })
     return true
   } catch (error) {
     console.error('Failed to delete round:', error)
+    return false
+  }
+}
+
+export async function toggleMulligan(
+  roundId: string,
+  playerId: string,
+  holeNumber: number
+): Promise<boolean> {
+  try {
+    // Check if mulligan already exists
+    const existing = await prisma.mulligan.findUnique({
+      where: {
+        roundId_playerId_holeNumber: {
+          roundId,
+          playerId,
+          holeNumber,
+        },
+      },
+    })
+
+    if (existing) {
+      // Remove mulligan
+      await prisma.mulligan.delete({
+        where: {
+          roundId_playerId_holeNumber: {
+            roundId,
+            playerId,
+            holeNumber,
+          },
+        },
+      })
+    } else {
+      // Add mulligan
+      await prisma.mulligan.create({
+        data: {
+          roundId,
+          playerId,
+          holeNumber,
+        },
+      })
+    }
+    return true
+  } catch (error) {
+    console.error('Failed to toggle mulligan:', error)
     return false
   }
 }

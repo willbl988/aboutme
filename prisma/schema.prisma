@@ -66,15 +66,18 @@ model Round {
   
   players   RoundPlayer[]
   scores    Score[]
+  mulligans Mulligan[]
 }
 
 model RoundPlayer {
-  id       String @id @default(cuid())
-  roundId String
-  round    Round  @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  name     String
+  id              String     @id @default(cuid())
+  roundId         String
+  round           Round      @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  name            String
+  mulligansAllowed Int        @default(0)
   
-  scores   Score[]
+  scores          Score[]
+  mulligans       Mulligan[]
   
   @@index([roundId])
 }
@@ -89,6 +92,19 @@ model Score {
   score         Int
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+  
+  @@unique([roundId, playerId, holeNumber])
+  @@index([roundId, playerId])
+}
+
+model Mulligan {
+  id            String       @id @default(cuid())
+  roundId       String
+  round         Round        @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  playerId      String
+  player        RoundPlayer  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  holeNumber    Int
+  createdAt     DateTime     @default(now())
   
   @@unique([roundId, playerId, holeNumber])
   @@index([roundId, playerId])

@@ -14,9 +14,13 @@ interface Round {
   players: {
     id: string
     name: string
+    mulligansAllowed: number
     scores: {
       holeNumber: number
       score: number
+    }[]
+    mulligans: {
+      holeNumber: number
     }[]
   }[]
   createdAt: string
@@ -91,6 +95,49 @@ export default function RoundDetailPage() {
     } catch (error) {
       console.error('Failed to update score:', error)
     }
+  }
+
+  const toggleMulligan = async (playerId: string, holeNumber: number) => {
+    try {
+      const response = await fetch(`/api/rounds/${roundId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'toggleMulligan',
+          playerId,
+          holeNumber,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setRound(data.round)
+      }
+    } catch (error) {
+      console.error('Failed to toggle mulligan:', error)
+    }
+  }
+
+  const hasMulligan = (playerId: string, holeNumber: number): boolean => {
+    if (!round) return false
+    const player = round.players.find(p => p.id === playerId)
+    if (!player || !player.mulligans) return false
+    return player.mulligans.some(m => m.holeNumber === holeNumber)
+  }
+
+  const getMulligansUsed = (playerId: string): number => {
+    if (!round) return 0
+    const player = round.players.find(p => p.id === playerId)
+    if (!player || !player.mulligans) return 0
+    return player.mulligans.length
+  }
+
+  const getMulligansRemaining = (playerId: string): number => {
+    if (!round) return 0
+    const player = round.players.find(p => p.id === playerId)
+    if (!player) return 0
+    const used = getMulligansUsed(playerId)
+    return Math.max(0, (player.mulligansAllowed || 0) - used)
   }
 
   const completeRound = async () => {
@@ -181,10 +228,20 @@ export default function RoundDetailPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {round.players.map((player) => {
               const total = getPlayerTotal(player.id)
+              const mulligansUsed = getMulligansUsed(player.id)
+              const mulligansRemaining = getMulligansRemaining(player.id)
               return (
                 <div key={player.id} className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <p className="font-semibold text-gray-900 dark:text-white mb-2">{player.name}</p>
                   <p className="text-3xl font-bold text-green-600 dark:text-green-400">{total || 0}</p>
+                  {(player.mulligansAllowed || 0) > 0 && (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                      Mulligans: {mulligansUsed}/{player.mulligansAllowed} used
+                      {mulligansRemaining > 0 && (
+                        <span className="text-green-600 dark:text-green-400"> ({mulligansRemaining} left)</span>
+                      )}
+                    </p>
+                  )}
                 </div>
               )
             })}
@@ -212,23 +269,43 @@ export default function RoundDetailPage() {
                   <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">{hole.par}</td>
                   {round.players.map((player) => {
                     const currentScore = getPlayerScore(player.id, hole.number)
+                    const usedMulligan = hasMulligan(player.id, hole.number)
+                    const canUseMulligan = (player.mulligansAllowed || 0) > 0 && getMulligansRemaining(player.id) > 0 && !usedMulligan
                     return (
                       <td key={player.id} className="py-4 px-4">
-                        <input
-                          type="number"
-                          min="1"
-                          max="15"
-                          value={currentScore || ''}
-                          onChange={(e) => {
-                            const score = parseInt(e.target.value)
-                            if (score > 0) {
-                              updateScore(player.id, hole.number, score)
-                            }
-                          }}
-                          disabled={round.status === 'completed'}
-                          className="w-16 mx-auto px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                          placeholder="-"
-                        />
+                        <div className="flex flex-col items-center gap-2">
+                          <input
+                            type="number"
+                            min="1"
+                            max="15"
+                            value={currentScore || ''}
+                            onChange={(e) => {
+                              const score = parseInt(e.target.value)
+                              if (score > 0) {
+                                updateScore(player.id, hole.number, score)
+                              }
+                            }}
+                            disabled={round.status === 'completed'}
+                            className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="-"
+                          />
+                          {(player.mulligansAllowed || 0) > 0 && (
+                            <button
+                              onClick={() => toggleMulligan(player.id, hole.number)}
+                              disabled={round.status === 'completed' || (!canUseMulligan && !usedMulligan)}
+                              className={`text-xs px-2 py-1 rounded transition-all ${
+                                usedMulligan
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-semibold'
+                                  : canUseMulligan
+                                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                  : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                              title={usedMulligan ? 'Mulligan used - click to remove' : canUseMulligan ? 'Click to use mulligan' : 'No mulligans remaining'}
+                            >
+                              {usedMulligan ? '✓ Mulligan' : 'Mulligan'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     )
                   })}
