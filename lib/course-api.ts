@@ -40,8 +40,8 @@ export interface CourseSearchParams {
 
 // API Configuration
 // You can switch between different providers by setting GOLF_API_PROVIDER
-// Options: 'golfcourseapi' | 'custom' | 'mock' | 'multi' (combines multiple sources)
-// For multiple sources, use comma-separated: 'golfcourseapi,popular'
+// Options: 'golfcourseapi' | 'golfapiio' | 'custom' | 'mock' | 'multi' (combines multiple sources)
+// For multiple sources, use comma-separated: 'golfcourseapi,popular' or 'golfcourseapi,golfapiio,popular'
 const API_PROVIDER = (process.env.GOLF_API_PROVIDER || 'golfcourseapi').toLowerCase()
 const GOLF_API_KEY = process.env.GOLF_API_KEY || null
 
@@ -50,6 +50,13 @@ const GOLF_API_KEY = process.env.GOLF_API_KEY || null
 // Authentication: Authorization: Key YOUR_API_KEY
 // Correct base URL: https://api.golfcourseapi.com/v1
 const GOLFCOURSEAPI_BASE = 'https://api.golfcourseapi.com/v1'
+
+// GolfAPI.io - Alternative API with 42,000+ courses
+// Documentation: https://www.golfapi.io/
+// Provides: course info, scorecards, pars, stroke indexes, tees, distances, slope/rating, coordinates
+// Note: May require API key - check their documentation
+const GOLFAPIIO_BASE = 'https://api.golfapi.io' // Update with actual base URL when available
+const GOLFAPIIO_KEY = process.env.GOLFAPIIO_KEY || null
 
 // Custom API endpoint (if you have your own)
 const CUSTOM_API_BASE = process.env.CUSTOM_GOLF_API_URL || null
@@ -479,6 +486,94 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
     console.error('GolfCourseAPI error:', error)
     // Return mock data as fallback
     return getMockCourses(query, limit)
+  }
+}
+
+// GolfAPI.io implementation
+// Documentation: https://www.golfapi.io/
+// Provides comprehensive course data including USGA ratings
+async function searchGolfAPIIO(query: string, limit: number): Promise<CourseApiResult[]> {
+  // Note: GolfAPI.io may require API key and have different endpoint structure
+  // This is a placeholder implementation - update with actual API details when available
+  console.log(`[searchGolfAPIIO] Searching for: "${query}"`)
+  
+  try {
+    // Placeholder - update with actual GolfAPI.io endpoint when API key is obtained
+    // Example structure (update based on actual API documentation):
+    const searchUrl = `${GOLFAPIIO_BASE}/courses/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+    }
+
+    if (GOLFAPIIO_KEY) {
+      headers['Authorization'] = `Bearer ${GOLFAPIIO_KEY}`
+      headers['X-API-Key'] = GOLFAPIIO_KEY
+    }
+
+    const response = await fetch(searchUrl, { headers })
+
+    if (!response.ok) {
+      console.warn(`[searchGolfAPIIO] API request failed: ${response.status}`)
+      return []
+    }
+
+    const data = await response.json()
+    
+    // Convert GolfAPI.io response format to our format
+    // Update this based on actual API response structure
+    if (Array.isArray(data)) {
+      return data.map(convertGolfAPIIOCourse).filter(Boolean) as CourseApiResult[]
+    } else if (data.courses && Array.isArray(data.courses)) {
+      return data.courses.map(convertGolfAPIIOCourse).filter(Boolean) as CourseApiResult[]
+    }
+
+    return []
+  } catch (error) {
+    console.error('[searchGolfAPIIO] Error:', error)
+    return []
+  }
+}
+
+// Convert GolfAPI.io course format to our format
+function convertGolfAPIIOCourse(apiCourse: any): CourseApiResult | null {
+  try {
+    // Update this based on actual GolfAPI.io response structure
+    // Expected fields: name, city, state, country, holes, rating, slope, etc.
+    if (!apiCourse.name) {
+      return null
+    }
+
+    const holes: CourseApiResult['holes'] = apiCourse.holes || apiCourse.scorecard || []
+    
+    return {
+      id: apiCourse.id || `golfapiio-${apiCourse.name.toLowerCase().replace(/\s+/g, '-')}`,
+      name: apiCourse.name || apiCourse.course_name || '',
+      address: apiCourse.address,
+      city: apiCourse.city,
+      state: apiCourse.state,
+      country: apiCourse.country || 'USA',
+      phone: apiCourse.phone,
+      website: apiCourse.website,
+      holes: holes.map((hole: any) => ({
+        number: hole.number || hole.hole_number || 0,
+        par: hole.par || 4,
+        yardage: hole.yardage || hole.length || 0,
+        handicap: hole.handicap || hole.stroke_index,
+        mensHandicap: hole.mens_handicap,
+        womensHandicap: hole.womens_handicap,
+        mensYardage: hole.mens_yardage,
+        womensYardage: hole.womens_yardage,
+      })),
+      totalYardage: apiCourse.total_yardage || apiCourse.yardage,
+      totalPar: apiCourse.total_par || apiCourse.par,
+      rating: apiCourse.rating || apiCourse.course_rating,
+      slope: apiCourse.slope || apiCourse.slope_rating,
+      latitude: apiCourse.latitude || apiCourse.lat,
+      longitude: apiCourse.longitude || apiCourse.lng,
+    }
+  } catch (error) {
+    console.error('Error converting GolfAPI.io course:', error)
+    return null
   }
 }
 
