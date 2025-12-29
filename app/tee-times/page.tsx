@@ -153,14 +153,23 @@ export default function TeeTimesPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to search tee times')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorMessage = errorData.details || errorData.error || 'Failed to search tee times'
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
       setTeeTimes(data.teeTimes || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to search tee times:', error)
-      alert('Failed to search tee times. Please try again.')
+      const errorMessage = error?.message || 'Failed to search tee times. Please try again.'
+      
+      // Check if it's a migration error
+      if (errorMessage.includes('migration') || errorMessage.includes('TeeTime')) {
+        alert(`${errorMessage}\n\nThis feature requires a database migration. Please contact support or wait for the migration to be applied.`)
+      } else {
+        alert(errorMessage)
+      }
     } finally {
       setSearchLoading(false)
     }

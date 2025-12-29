@@ -120,69 +120,70 @@ async function generateTeeTimesForCourse(courseId: string, startDate: Date, days
 }
 
 export async function searchTeeTimes(params: TeeTimeSearchParams): Promise<TeeTimeResult[]> {
-  const {
-    query,
-    lat,
-    lon,
-    radius = 25, // Default 25 miles
-    date,
-    minDate,
-    maxDate,
-    players = 1,
-  } = params
+  try {
+    const {
+      query,
+      lat,
+      lon,
+      radius = 25, // Default 25 miles
+      date,
+      minDate,
+      maxDate,
+      players = 1,
+    } = params
 
-  // Build course search conditions
-  const courseWhere: any = {}
-  
-  if (query) {
-    courseWhere.OR = [
-      { name: { contains: query, mode: 'insensitive' } },
-      { city: { contains: query, mode: 'insensitive' } },
-      { state: { contains: query, mode: 'insensitive' } },
-      { address: { contains: query, mode: 'insensitive' } },
-    ]
-  }
-
-  // Build tee time search conditions
-  const teeTimeWhere: any = {
-    status: 'available',
-  }
-
-  // Date filtering
-  if (date) {
-    const searchDate = new Date(date)
-    searchDate.setHours(0, 0, 0, 0)
-    const nextDay = new Date(searchDate)
-    nextDay.setDate(nextDay.getDate() + 1)
-    teeTimeWhere.date = {
-      gte: searchDate,
-      lt: nextDay,
+    // Build course search conditions
+    const courseWhere: any = {}
+    
+    if (query) {
+      courseWhere.OR = [
+        { name: { contains: query, mode: 'insensitive' } },
+        { city: { contains: query, mode: 'insensitive' } },
+        { state: { contains: query, mode: 'insensitive' } },
+        { address: { contains: query, mode: 'insensitive' } },
+      ]
     }
-  } else {
-    const now = new Date()
-    if (minDate) {
-      teeTimeWhere.date = { gte: new Date(minDate) }
-    } else {
-      teeTimeWhere.date = { gte: now }
+
+    // Build tee time search conditions
+    const teeTimeWhere: any = {
+      status: 'available',
     }
-    if (maxDate) {
+
+    // Date filtering
+    if (date) {
+      const searchDate = new Date(date)
+      searchDate.setHours(0, 0, 0, 0)
+      const nextDay = new Date(searchDate)
+      nextDay.setDate(nextDay.getDate() + 1)
       teeTimeWhere.date = {
-        ...teeTimeWhere.date,
-        lte: new Date(maxDate),
+        gte: searchDate,
+        lt: nextDay,
+      }
+    } else {
+      const now = new Date()
+      if (minDate) {
+        teeTimeWhere.date = { gte: new Date(minDate) }
+      } else {
+        teeTimeWhere.date = { gte: now }
+      }
+      if (maxDate) {
+        teeTimeWhere.date = {
+          ...teeTimeWhere.date,
+          lte: new Date(maxDate),
+        }
       }
     }
-  }
 
-  // Get courses
-  const courses = await prisma.course.findMany({
-    where: courseWhere,
-    include: {
-      TeeTimes: {
-        where: teeTimeWhere,
-        orderBy: { date: 'asc' },
+    // Get courses
+    const courses = await prisma.course.findMany({
+      where: courseWhere,
+      include: {
+        TeeTimes: {
+          where: teeTimeWhere,
+          orderBy: { date: 'asc' },
+        },
       },
-    },
-  })
+    })
 
   // Generate tee times for courses that don't have any (for demo)
   for (const course of courses) {
