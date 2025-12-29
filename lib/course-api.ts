@@ -62,7 +62,7 @@ let courseCache: {
 } | null = null
 
 const CACHE_DURATION = 1000 * 60 * 60 // 1 hour cache
-const TARGET_CACHE_SIZE = 2000 // Target: cache 2000 courses (100 pages) for good coverage - faster initial load
+const TARGET_CACHE_SIZE = 5000 // Target: cache 5000 courses (250 pages) for better coverage - includes more cities
 
 // Convert GolfCourseAPI.com response format
 // API returns: { id, club_name, course_name, location: { address, city, state, country, latitude, longitude }, tees: { male: [...], female: [...] } }
@@ -321,11 +321,16 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
     
     // If no courses were fetched, return empty array or mock data
     if (!allCourses || allCourses.length === 0) {
-      console.warn('No courses fetched from API, returning empty results')
+      console.warn('[searchGolfCourseAPI] No courses fetched from API, returning empty results')
+      console.warn('[searchGolfCourseAPI] This might mean the API key is invalid or the API is down')
       return []
     }
 
     console.log(`[searchGolfCourseAPI] Searching through ${allCourses.length} cached courses for: "${query}"`)
+    
+    // Log sample of cities in cache for debugging
+    const sampleCities = [...new Set(allCourses.map(c => c.city).filter(Boolean).slice(0, 20))]
+    console.log(`[searchGolfCourseAPI] Sample cities in cache:`, sampleCities.join(', '))
 
     // Client-side filtering: The API's search parameter doesn't work properly
     // So we filter and rank the results ourselves based on the query
