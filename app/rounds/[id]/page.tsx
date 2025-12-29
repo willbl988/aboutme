@@ -201,17 +201,9 @@ export default function RoundDetailPage() {
     return round?.Course.Hole.find(h => h.number === holeNumber)?.par || 4
   }
 
-  if (loading || !round) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-      </div>
-    )
-  }
-
   const holes = round?.Course.Hole || Array.from({ length: 18 }, (_, i) => ({ number: i + 1, par: 4 }))
 
-  // Calculate wager results
+  // Calculate wager results - must be before any conditional returns
   const wagerResults = useMemo(() => {
     if (!round?.wagers || round.wagers.length === 0) return []
     try {
@@ -230,6 +222,14 @@ export default function RoundDetailPage() {
     if (wagerResults.length === 0) return new Map()
     return calculateNetAmounts(wagerResults)
   }, [wagerResults])
+
+  if (loading || !round) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
