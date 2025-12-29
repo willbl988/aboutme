@@ -7,15 +7,15 @@ import Link from 'next/link'
 interface Round {
   id: string
   courseId: string
-  course: {
+  Course: {
     id: string
     name: string
-    holes?: { number: number; par: number; yardage?: number }[]
+    Hole?: { number: number; par: number; yardage?: number }[]
   }
-  players: {
+  RoundPlayer: {
     id: string
     name: string
-    scores: {
+    Score: {
       holeNumber: number
       score: number
     }[]
@@ -67,9 +67,9 @@ export default function RoundsPage() {
   }
 
   const getTotalScore = (round: Round, playerId: string) => {
-    const player = round.players?.find(p => p.id === playerId)
-    if (!player || !player.scores) return 0
-    return player.scores.reduce((sum: number, score: { score: number }) => sum + score.score, 0)
+    const player = round.RoundPlayer?.find(p => p.id === playerId)
+    if (!player || !player.Score) return 0
+    return player.Score.reduce((sum: number, score: { score: number }) => sum + score.score, 0)
   }
 
   const handleDeleteRound = async (e: React.MouseEvent, roundId: string, courseName: string) => {
@@ -182,7 +182,7 @@ export default function RoundsPage() {
                       {round.status}
                     </span>
                     <button
-                      onClick={(e) => handleDeleteRound(e, round.id, round.course.name)}
+                      onClick={(e) => handleDeleteRound(e, round.id, round.Course.name)}
                       disabled={deletingRoundId === round.id}
                       className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete round"
@@ -193,22 +193,22 @@ export default function RoundsPage() {
                 </div>
 
                 <Link href={`/rounds/${round.id}`}>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {round.players.map((player) => {
-                      const total = getTotalScore(round, player.id)
-                      return (
-                        <div key={player.id} className="text-center">
-                          <p className="font-semibold text-gray-900 dark:text-white">
-                            {player.name}
-                          </p>
-                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                            {total || '-'}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                        </div>
-                      )
-                    })}
-                  </div>
+                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                         {round.RoundPlayer.map((player) => {
+                           const total = getTotalScore(round, player.id)
+                           return (
+                             <div key={player.id} className="text-center">
+                               <p className="font-semibold text-gray-900 dark:text-white">
+                                 {player.name}
+                               </p>
+                               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                 {total || '-'}
+                               </p>
+                               <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                             </div>
+                           )
+                         })}
+                       </div>
                 </Link>
               </div>
             ))}
