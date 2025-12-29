@@ -220,7 +220,7 @@ export default function StatisticsPage() {
                       </p>
                     </div>
                     <div className="text-right">
-                      {round.players.map((player, idx) => (
+                      {round.RoundPlayer.map((player, idx) => (
                         <p key={idx} className="text-sm text-gray-600 dark:text-gray-400">
                           {player.name}: {player.score}
                         </p>
