@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma generate && (timeout 30 prisma migrate deploy || echo 'Migration timeout or already applied, continuing...') && next build",
+  "buildCommand": "prisma generate && (prisma migrate deploy || echo 'Migrations failed or already applied, continuing build...') && next build",
   "installCommand": "npm install"
 }
 
