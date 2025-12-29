@@ -272,7 +272,7 @@ export default function CoursesPage() {
                         <div>
                           <span className="text-gray-600 dark:text-gray-400">Holes:</span>
                           <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                            {course.Hole.length}
+                            {course.holes.length}
                           </span>
                         </div>
                         {course.totalPar && course.totalPar > 0 ? (
