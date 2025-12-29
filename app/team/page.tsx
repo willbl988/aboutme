@@ -84,8 +84,15 @@ export default function TeamPage() {
   const searchTimeoutRef = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
-    checkAuth()
-    loadTeam()
+    const initialize = async () => {
+      await checkAuth()
+      // Only load team after auth check completes
+      // Small delay to ensure auth state is set
+      setTimeout(() => {
+        loadTeam()
+      }, 100)
+    }
+    initialize()
   }, [])
 
   useEffect(() => {
@@ -100,13 +107,30 @@ export default function TeamPage() {
     try {
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
+        cache: 'no-store',
       })
+      
+      if (!response.ok) {
+        console.error('Auth check failed with status:', response.status)
+        // Only redirect if it's a clear auth error (401), not server errors
+        if (response.status === 401) {
+          router.push('/login')
+        }
+        return
+      }
+      
       const data = await response.json()
       if (!data.user) {
+        console.log('No user found in auth response, redirecting to login')
         router.push('/login')
+      } else {
+        console.log('Auth check successful, user:', data.user.email)
       }
     } catch (error) {
-      router.push('/login')
+      console.error('Auth check error (network/database issue):', error)
+      // Don't redirect on network errors - might be temporary
+      // Only redirect if we're sure it's an auth issue
+      // For now, let the page load and show errors if API calls fail
     }
   }
 
