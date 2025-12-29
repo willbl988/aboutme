@@ -2,6 +2,8 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import WagerManager from '@/components/WagerManager'
+import type { Wager } from '@/lib/wager-types'
 
 interface Course {
   id: string
@@ -25,6 +27,8 @@ function NewRoundContent() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [players, setPlayers] = useState<Player[]>([{ id: '1', name: '', mulligansEnabled: false }])
   const [gameMode, setGameMode] = useState<string>('stroke')
+  const [wager, setWager] = useState<string>('') // Legacy field for backwards compatibility
+  const [wagers, setWagers] = useState<Wager[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -167,6 +171,7 @@ function NewRoundContent() {
           courseId: selectedCourse.id,
           players: validPlayers,
           mode: gameMode,
+          wager: wager.trim() || null,
         }),
       })
 
@@ -267,6 +272,14 @@ function NewRoundContent() {
               {gameMode === 'alternate' && 'Players alternate shots on each hole'}
               {gameMode === 'match' && 'Hole-by-hole competition, win/lose/tie each hole'}
             </p>
+          </div>
+
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
+            <WagerManager
+              wagers={wagers}
+              players={players.filter(p => p.name.trim()).map(p => p.name)}
+              onChange={setWagers}
+            />
           </div>
 
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">

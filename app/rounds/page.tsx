@@ -4,10 +4,14 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+import type { Wager } from '@/lib/wager-types'
+
 interface Round {
   id: string
   courseId: string
   mode?: string
+  wager?: string | null // Legacy field
+  wagers?: Wager[] | null // New wagers array
   Course: {
     id: string
     name: string
@@ -178,6 +182,16 @@ export default function RoundsPage() {
                             {round.mode === 'alternate' && 'Alternate Shot'}
                             {round.mode === 'match' && 'Match Play'}
                             {!['scramble', 'bestball', 'alternate', 'match'].includes(round.mode) && round.mode}
+                          </span>
+                        )}
+                        {(round.wagers && round.wagers.length > 0) && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                            💰 {round.wagers.length} wager{round.wagers.length !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                        {!round.wagers && round.wager && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                            💰 {round.wager}
                           </span>
                         )}
                       </div>

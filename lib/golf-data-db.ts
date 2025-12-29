@@ -137,7 +137,9 @@ export async function createRound(
   courseId: string,
   createdById: string,
   players: Player[],
-  mode: string = 'stroke'
+  mode: string = 'stroke',
+  wager?: string | null,
+  wagers?: any[] | null
 ): Promise<RoundWithDetails> {
   // Get course to include in response
   const course = await prisma.course.findUnique({
@@ -176,6 +178,8 @@ export async function createRound(
       createdById,
       status: 'active',
       mode: mode || 'stroke',
+      wager: wager || null, // Legacy field
+      wagers: wagers && wagers.length > 0 ? wagers : null, // New wagers array
       RoundPlayer: {
         create: playersData,
       },

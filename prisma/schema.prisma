@@ -48,6 +48,8 @@ model Round {
   createdById String
   status      String        @default("active")
   mode        String        @default("stroke")
+  wager       String?       // Legacy field, kept for backwards compatibility
+  wagers      Json?         // New field for multiple wagers
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   Mulligan    Mulligan[]
