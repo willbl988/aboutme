@@ -643,33 +643,33 @@ export default function CoursesPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="flex gap-2 border-b border-gray-200 dark:border-green-800/30">
+        <div className="mb-6 -mx-4 sm:mx-0 px-4 sm:px-0">
+          <div className="flex gap-1 sm:gap-2 border-b-2 border-gray-200 dark:border-green-800/30 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => {
                 setActiveTab('yours')
                 setShowForm(false)
               }}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+              className={`flex-shrink-0 px-4 sm:px-6 py-3 sm:py-3 font-semibold transition-all border-b-2 whitespace-nowrap text-base sm:text-base min-h-[48px] flex items-center ${
                 activeTab === 'yours'
                   ? 'border-green-600 text-green-600 dark:text-green-400'
                   : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
-              📋 Your Courses
+              <span className="hidden sm:inline">📋 </span>Your Courses
             </button>
             <button
               onClick={() => {
                 setActiveTab('import')
                 setShowForm(false)
               }}
-              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+              className={`flex-shrink-0 px-4 sm:px-6 py-3 sm:py-3 font-semibold transition-all border-b-2 whitespace-nowrap text-base sm:text-base min-h-[48px] flex items-center ${
                 activeTab === 'import'
                   ? 'border-green-600 text-green-600 dark:text-green-400'
                   : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
-              🌐 Import from Database
+              <span className="hidden sm:inline">🌐 </span>Import
             </button>
           </div>
         </div>
