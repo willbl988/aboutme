@@ -113,6 +113,8 @@ export interface CourseData {
   website?: string
   latitude?: number
   longitude?: number
+  rating?: number
+  slope?: number
 }
 
 // Course functions
@@ -190,6 +192,8 @@ export async function createCourse(
       website: courseData?.website,
       latitude: courseData?.latitude,
       longitude: courseData?.longitude,
+      rating: courseData?.rating,
+      slope: courseData?.slope,
       Hole: {
         create: holes.map((hole) => ({
           number: hole.number,

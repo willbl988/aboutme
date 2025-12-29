@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, holes, address, city, state, country, phone, website, latitude, longitude } = await request.json()
+    const { name, holes, address, city, state, country, phone, website, latitude, longitude, rating, slope } = await request.json()
 
     if (!name || !holes || !Array.isArray(holes)) {
       return NextResponse.json(
@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       website,
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
+      rating: rating ? parseFloat(rating) : undefined,
+      slope: slope ? parseInt(slope) : undefined,
     }
 
     const course = await createCourse(name, holes, courseData)

@@ -18,6 +18,8 @@ model Course {
   website   String?
   latitude  Float?
   longitude Float?
+  rating    Float?   // Course rating (e.g., 72.5)
+  slope     Int?     // Slope rating (e.g., 135)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Hole      Hole[]

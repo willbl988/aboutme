@@ -27,6 +27,8 @@ interface ApiCourse {
   holes: Array<{ number: number; par: number; yardage: number }>
   totalYardage?: number
   totalPar?: number
+  rating?: number
+  slope?: number
 }
 
 export default function CoursesPage() {
@@ -34,7 +36,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [showApiSearch, setShowApiSearch] = useState(false)
+  const [activeTab, setActiveTab] = useState<'yours' | 'import'>('yours')
   const [apiSearchQuery, setApiSearchQuery] = useState('')
   const [apiSearchResults, setApiSearchResults] = useState<ApiCourse[]>([])
   const [apiSearchLoading, setApiSearchLoading] = useState(false)
@@ -64,15 +66,15 @@ export default function CoursesPage() {
     checkAuth()
   }, [])
 
-  // Auto-search when API search query changes (debounced)
+  // Auto-search when API search query changes (debounced) - only when import tab is active
   useEffect(() => {
-    if (showApiSearch && apiSearchQuery.trim().length >= 2) {
+    if (activeTab === 'import' && apiSearchQuery.trim().length >= 2) {
       const timeoutId = setTimeout(() => {
         searchApiCourses(1, false)
       }, 500) // Debounce search
       
       return () => clearTimeout(timeoutId)
-    } else if (showApiSearch && apiSearchQuery.trim().length === 0) {
+    } else if (activeTab === 'import' && apiSearchQuery.trim().length === 0) {
       // Clear results when query is empty
       setApiSearchResults([])
       setApiSearchPage(1)
@@ -80,7 +82,7 @@ export default function CoursesPage() {
       setApiSearchHasMore(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiSearchQuery, showApiSearch])
+  }, [apiSearchQuery, activeTab])
 
   useEffect(() => {
     if (!loading) {
@@ -397,12 +399,15 @@ export default function CoursesPage() {
           city: apiCourse.city,
           state: apiCourse.state,
           country: apiCourse.country,
+          rating: apiCourse.rating,
+          slope: apiCourse.slope,
         }),
         credentials: 'include',
       })
 
       if (response.ok) {
-        setShowApiSearch(false)
+        // Switch to "Your Courses" tab to show the newly imported course
+        setActiveTab('yours')
         setApiSearchQuery('')
         setApiSearchResults([])
         setApiSearchPage(1)
@@ -459,17 +464,8 @@ export default function CoursesPage() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
             <button
               onClick={() => {
-                setShowApiSearch(!showApiSearch)
-                setShowForm(false)
-              }}
-              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm sm:text-base w-full sm:w-auto"
-            >
-              {showApiSearch ? 'Cancel' : '🔍 Import Course'}
-            </button>
-            <button
-              onClick={() => {
                 setShowForm(!showForm)
-                setShowApiSearch(false)
+                setActiveTab('yours')
               }}
               className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto"
             >
@@ -478,14 +474,182 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {showApiSearch && (
+        {/* Create Course Form - Show before tabs when active */}
+        {showForm && (
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Import Course from Database</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Search external golf course databases to find and import courses with complete hole information. 
-                Imported courses will be added to your course list.
-              </p>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Course</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false)
+                  setFormData({
+                    name: '',
+                    holes: Array.from({ length: 18 }, (_, i) => ({
+                      number: i + 1,
+                      par: 4,
+                      yardage: 0,
+                    })),
+                  })
+                  setNumberOfHoles(18)
+                }}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Course Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Pebble Beach Golf Links"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Number of Holes
+                </label>
+                <div className="flex gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (numberOfHoles !== 9) {
+                        setNumberOfHoles(9)
+                        setFormData({
+                          ...formData,
+                          holes: Array.from({ length: 9 }, (_, i) => ({
+                            number: i + 1,
+                            par: 4,
+                            yardage: 0,
+                          })),
+                        })
+                      }
+                    }}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      numberOfHoles === 9
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    9 Holes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (numberOfHoles !== 18) {
+                        setNumberOfHoles(18)
+                        setFormData({
+                          ...formData,
+                          holes: Array.from({ length: 18 }, (_, i) => ({
+                            number: i + 1,
+                            par: 4,
+                            yardage: 0,
+                          })),
+                        })
+                      }
+                    }}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      numberOfHoles === 18
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    18 Holes
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                  Holes Configuration
+                </label>
+                <div className={`grid gap-4 ${numberOfHoles === 9 ? 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9' : 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9'}`}>
+                  {formData.holes.map((hole, index) => (
+                    <div key={index} className="space-y-2">
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+                        Hole {hole.number}
+                      </label>
+                      <input
+                        type="number"
+                        min="3"
+                        max="6"
+                        value={hole.par}
+                        onChange={(e) => {
+                          const newHoles = [...formData.holes]
+                          newHoles[index].par = parseInt(e.target.value) || 4
+                          setFormData({ ...formData, holes: newHoles })
+                        }}
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                        placeholder="Par"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all"
+              >
+                Create Course
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => {
+                setActiveTab('yours')
+                setShowForm(false)
+              }}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+                activeTab === 'yours'
+                  ? 'border-green-600 text-green-600 dark:text-green-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              📋 Your Courses
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('import')
+                setShowForm(false)
+              }}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+                activeTab === 'import'
+                  ? 'border-green-600 text-green-600 dark:text-green-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              🌐 Import from Database
+            </button>
+          </div>
+        </div>
+
+        {/* Import Tab Content */}
+        {activeTab === 'import' && (
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border-2 border-blue-200 dark:border-blue-800/50">
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="text-3xl">🌐</div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Import Course from External Database</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Search 30,000+ golf courses from external databases. Imported courses will be added to your course list.
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="space-y-4">
               <div className="flex gap-3">
@@ -501,8 +665,8 @@ export default function CoursesPage() {
                     setApiSearchHasMore(false)
                   }}
                   onKeyPress={(e) => e.key === 'Enter' && searchApiCourses(1, false)}
-                  placeholder="Search by course name, city, or location..."
-                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="Search 30,000+ courses by name, city, or state (e.g., 'Pebble Beach', 'Dallas', 'Alabama')..."
+                  className="flex-1 px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-base"
                 />
                 <button
                   onClick={() => searchApiCourses(1, false)}
@@ -626,197 +790,129 @@ export default function CoursesPage() {
           </div>
         )}
 
-        {showForm && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create New Course</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Course Name
+        {/* Your Courses Tab Content */}
+        {activeTab === 'yours' && (
+          <>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🔍</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Search Your Courses
                 </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  placeholder="Pebble Beach Golf Links"
-                />
               </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                Filter your existing courses by name, city, state, or address
+              </p>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search your courses by name, city, state, or address..."
+                className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Number of Holes
-                </label>
-                <div className="flex gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (numberOfHoles !== 9) {
-                        setNumberOfHoles(9)
-                        setFormData({
-                          ...formData,
-                          holes: Array.from({ length: 9 }, (_, i) => ({
-                            number: i + 1,
-                            par: 4,
-                            yardage: 0,
-                          })),
-                        })
-                      }
-                    }}
-                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                      numberOfHoles === 9
-                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    9 Holes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (numberOfHoles !== 18) {
-                        setNumberOfHoles(18)
-                        setFormData({
-                          ...formData,
-                          holes: Array.from({ length: 18 }, (_, i) => ({
-                            number: i + 1,
-                            par: 4,
-                            yardage: 0,
-                          })),
-                        })
-                      }
-                    }}
-                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                      numberOfHoles === 18
-                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    18 Holes
-                  </button>
-                </div>
+            {courses.length === 0 ? (
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
+                <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
+                  {searchQuery ? 'No courses found matching your search.' : 'No courses yet. Create your first course or import one from the database!'}
+                </p>
+                {!searchQuery && (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all"
+                    >
+                      + Create Course
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('import')}
+                      className="px-6 py-3 bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                    >
+                      🌐 Import from Database
+                    </button>
+                  </div>
+                )}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                  Holes Configuration
-                </label>
-                <div className={`grid gap-4 ${numberOfHoles === 9 ? 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9' : 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9'}`}>
-                  {formData.holes.map((hole, index) => (
-                    <div key={index} className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
-                        Hole {hole.number}
-                      </label>
-                      <input
-                        type="number"
-                        min="3"
-                        max="6"
-                        value={hole.par}
-                        onChange={(e) => {
-                          const newHoles = [...formData.holes]
-                          newHoles[index].par = parseInt(e.target.value) || 4
-                          setFormData({ ...formData, holes: newHoles })
-                        }}
-                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
-                        placeholder="Par"
-                      />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course) => (
+                  <div
+                    key={course.id}
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
+                  >
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                      {course.name}
+                    </h2>
+                    {(course.city || course.state || course.country) && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {[course.city, course.state, course.country].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {course.address && (
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                        {course.address}
+                      </p>
+                    )}
+                    <div className="space-y-2 mb-4">
+                      <p className="text-gray-600 dark:text-gray-300">
+                        {course.Hole.length} holes
+                      </p>
+                      {course.Hole.length > 0 && course.Hole[0].yardage && (
+                        <div className="flex flex-wrap gap-3 text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Par: <span className="font-semibold text-gray-900 dark:text-white">
+                              {course.Hole.reduce((sum, hole) => sum + hole.par, 0)}
+                            </span>
+                          </span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Total: <span className="font-semibold text-gray-900 dark:text-white">
+                              {course.Hole.reduce((sum, hole) => sum + (hole.yardage || 0), 0).toLocaleString()} yds
+                            </span>
+                          </span>
+                        </div>
+                      )}
+                      {((course as any).rating || (course as any).slope) && (
+                        <div className="flex flex-wrap gap-3 text-sm pt-2 border-t border-gray-200 dark:border-gray-700">
+                          {(course as any).rating && (
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Rating: <span className="font-semibold text-gray-900 dark:text-white">
+                                {(course as any).rating.toFixed(1)}
+                              </span>
+                            </span>
+                          )}
+                          {(course as any).slope && (
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Slope: <span className="font-semibold text-gray-900 dark:text-white">
+                                {(course as any).slope}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                    <div className="flex items-center justify-between">
+                      <Link
+                        href={`/rounds/new?courseId=${course.id}`}
+                        className="text-green-600 dark:text-green-400 font-semibold hover:underline"
+                      >
+                        Start Round →
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteCourse(course.id, course.name)}
+                        disabled={deletingCourseId === course.id}
+                        className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingCourseId === course.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              <button
-                type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all"
-              >
-                Create Course
-              </button>
-            </form>
-          </div>
+            )}
+          </>
         )}
 
-        <div className="mb-6">
-          <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Search Your Courses
-            </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-              Filter your existing courses by name, city, state, or address
-            </p>
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search your courses by name, city, state, or address..."
-            className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-        {courses.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              {searchQuery ? 'No courses found matching your search.' : 'No courses yet. Create your first course to get started!'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
-              >
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                  {course.name}
-                </h2>
-                {(course.city || course.state || course.country) && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    {[course.city, course.state, course.country].filter(Boolean).join(', ')}
-                  </p>
-                )}
-                {course.address && (
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
-                    {course.address}
-                  </p>
-                )}
-                <div className="space-y-2 mb-4">
-                  <p className="text-gray-600 dark:text-gray-300">
-                    {course.Hole.length} holes
-                  </p>
-                  {course.Hole.length > 0 && course.Hole[0].yardage && (
-                    <div className="flex flex-wrap gap-3 text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Par: <span className="font-semibold text-gray-900 dark:text-white">
-                          {course.Hole.reduce((sum, hole) => sum + hole.par, 0)}
-                        </span>
-                      </span>
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Total: <span className="font-semibold text-gray-900 dark:text-white">
-                          {course.Hole.reduce((sum, hole) => sum + (hole.yardage || 0), 0).toLocaleString()} yds
-                        </span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <Link
-                    href={`/rounds/new?courseId=${course.id}`}
-                    className="text-green-600 dark:text-green-400 font-semibold hover:underline"
-                  >
-                    Start Round →
-                  </Link>
-                  <button
-                    onClick={() => handleDeleteCourse(course.id, course.name)}
-                    disabled={deletingCourseId === course.id}
-                    className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {deletingCourseId === course.id ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )
