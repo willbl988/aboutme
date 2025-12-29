@@ -68,17 +68,29 @@ export default function CoursesPage() {
     try {
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
+        cache: 'no-store',
       })
+      
+      if (!response.ok) {
+        console.error('Auth check failed with status:', response.status)
+        setLoading(false)
+        router.push('/login')
+        return
+      }
+      
       const data = await response.json()
       if (!data.user) {
+        console.log('No user found, redirecting to login')
+        setLoading(false)
         router.push('/login')
         return
       }
       // Only load courses if authenticated
-      loadCourses()
+      await loadCourses()
     } catch (error) {
       console.error('Auth check failed:', error)
-      router.push('/login')
+      setLoading(false)
+      // Don't redirect on network errors - might be temporary
     }
   }
 
@@ -91,12 +103,22 @@ export default function CoursesPage() {
       
       const response = await fetch(url, {
         credentials: 'include',
+        cache: 'no-store',
       })
+      
+      if (!response.ok) {
+        console.error(`[loadCourses] Failed with status: ${response.status}`)
+        setCourses([])
+        setLoading(false)
+        return
+      }
+      
       const data = await response.json()
       console.log(`[loadCourses] Received ${data.courses?.length || 0} courses`)
       setCourses(data.courses || [])
     } catch (error) {
-      console.error('Failed to load courses:', error)
+      console.error('[loadCourses] Failed to load courses:', error)
+      setCourses([])
     } finally {
       setLoading(false)
     }
