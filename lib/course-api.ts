@@ -40,7 +40,8 @@ export interface CourseSearchParams {
 
 // API Configuration
 // You can switch between different providers by setting GOLF_API_PROVIDER
-// Options: 'golfcourseapi' | 'custom' | 'mock'
+// Options: 'golfcourseapi' | 'custom' | 'mock' | 'multi' (combines multiple sources)
+// For multiple sources, use comma-separated: 'golfcourseapi,popular'
 const API_PROVIDER = (process.env.GOLF_API_PROVIDER || 'golfcourseapi').toLowerCase()
 const GOLF_API_KEY = process.env.GOLF_API_KEY || null
 
@@ -52,6 +53,10 @@ const GOLFCOURSEAPI_BASE = 'https://api.golfcourseapi.com/v1'
 
 // Custom API endpoint (if you have your own)
 const CUSTOM_API_BASE = process.env.CUSTOM_GOLF_API_URL || null
+
+// Popular courses database - a curated list of well-known courses
+// This serves as a fallback and supplement to API data
+const POPULAR_COURSES_DB: CourseApiResult[] = []
 
 // Cache for course data to avoid repeated API calls
 // Cache structure: { courses: CourseApiResult[], fetchedAt: number, pagesFetched: number }
@@ -172,40 +177,113 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
   console.log(`[searchCourses] API Key: ${GOLF_API_KEY ? 'Set ✓' : 'Not set ✗'}`)
 
   try {
-    // Route to appropriate provider
-    let results: CourseApiResult[] = []
-    switch (API_PROVIDER) {
-      case 'golfcourseapi':
-        if (!GOLF_API_KEY) {
-          console.warn('[searchCourses] ⚠️  GOLF_API_KEY not set - using mock data. Get your API key from https://golfcourseapi.com')
+    // Check if using multiple providers
+    const providers = API_PROVIDER.includes(',') 
+      ? API_PROVIDER.split(',').map(p => p.trim())
+      : [API_PROVIDER]
+
+    let allResults: CourseApiResult[] = []
+    const seenIds = new Set<string>()
+
+    // Search each provider and combine results
+    for (const provider of providers) {
+      try {
+        let providerResults: CourseApiResult[] = []
+        
+        switch (provider) {
+          case 'golfcourseapi':
+            if (!GOLF_API_KEY) {
+              console.warn('[searchCourses] ⚠️  GOLF_API_KEY not set - skipping GolfCourseAPI')
+            } else {
+              providerResults = await searchGolfCourseAPI(query, limit * 2) // Get more to allow for deduplication
+            }
+            break
+          case 'popular':
+            const { searchPopularCourses } = await import('./popular-courses')
+            providerResults = searchPopularCourses(query, limit * 2)
+            console.log(`[searchCourses] Popular courses DB: Found ${providerResults.length} matches`)
+            break
+          case 'custom':
+            if (CUSTOM_API_BASE) {
+              providerResults = await searchCustomAPI(query, limit * 2)
+            } else {
+              console.warn('CUSTOM_GOLF_API_URL not set, skipping custom API')
+            }
+            break
+          case 'mock':
+            providerResults = getMockCourses(query, limit * 2)
+            break
+          default:
+            console.warn(`[searchCourses] Unknown provider: ${provider}, skipping`)
         }
-        results = await searchGolfCourseAPI(query, limit)
-        break
-      case 'custom':
-        if (CUSTOM_API_BASE) {
-          results = await searchCustomAPI(query, limit)
-        } else {
-          console.warn('CUSTOM_GOLF_API_URL not set, falling back to mock data')
-          results = getMockCourses(query, limit)
+
+        // Deduplicate by name and location
+        for (const course of providerResults) {
+          const key = `${course.name.toLowerCase()}_${course.city?.toLowerCase()}_${course.state?.toLowerCase()}`
+          if (!seenIds.has(key)) {
+            seenIds.add(key)
+            allResults.push(course)
+          }
         }
-        break
-      case 'mock':
-        console.log('[searchCourses] Using mock data (GOLF_API_PROVIDER=mock)')
-        results = getMockCourses(query, limit)
-        break
-      default:
-        console.warn(`[searchCourses] Unknown provider: ${API_PROVIDER}, using mock data`)
-        results = getMockCourses(query, limit)
-        break
+      } catch (error) {
+        console.error(`[searchCourses] Error with provider ${provider}:`, error)
+        // Continue with other providers
+      }
     }
-    console.log(`[searchCourses] Returning ${results.length} results`)
-    return results
+
+    // If no results from any provider, fall back to popular courses + mock
+    if (allResults.length === 0) {
+      console.log('[searchCourses] No results from providers, using popular courses + mock data')
+      const { searchPopularCourses } = await import('./popular-courses')
+      const popularResults = searchPopularCourses(query, limit)
+      const mockResults = getMockCourses(query, limit)
+      allResults = [...popularResults, ...mockResults]
+      // Deduplicate
+      const deduped: CourseApiResult[] = []
+      const seen = new Set<string>()
+      for (const course of allResults) {
+        const key = `${course.name.toLowerCase()}_${course.city?.toLowerCase()}_${course.state?.toLowerCase()}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          deduped.push(course)
+        }
+      }
+      allResults = deduped
+    }
+
+    // Sort by relevance (prioritize exact matches, then city matches)
+    const sorted = allResults.sort((a, b) => {
+      const queryLower = query.toLowerCase()
+      const aName = a.name.toLowerCase()
+      const bName = b.name.toLowerCase()
+      const aCity = a.city?.toLowerCase() || ''
+      const bCity = b.city?.toLowerCase() || ''
+
+      // Exact name match
+      if (aName === queryLower && bName !== queryLower) return -1
+      if (bName === queryLower && aName !== queryLower) return 1
+      
+      // City match
+      if (aCity.includes(queryLower) && !bCity.includes(queryLower)) return -1
+      if (bCity.includes(queryLower) && !aCity.includes(queryLower)) return 1
+      
+      // Name starts with query
+      if (aName.startsWith(queryLower) && !bName.startsWith(queryLower)) return -1
+      if (bName.startsWith(queryLower) && !aName.startsWith(queryLower)) return 1
+      
+      return 0
+    })
+
+    const finalResults = sorted.slice(0, limit)
+    console.log(`[searchCourses] Returning ${finalResults.length} results (from ${providers.length} provider(s))`)
+    return finalResults
   } catch (error) {
     console.error('Error searching courses:', error)
-    console.warn('[searchCourses] Error occurred, falling back to mock data')
+    console.warn('[searchCourses] Error occurred, falling back to popular courses + mock data')
+    const { searchPopularCourses } = await import('./popular-courses')
+    const popularResults = searchPopularCourses(query, limit)
     const mockResults = getMockCourses(query, limit)
-    console.log(`[searchCourses] Returning ${mockResults.length} mock results`)
-    return mockResults
+    return [...popularResults, ...mockResults].slice(0, limit)
   }
 }
 
