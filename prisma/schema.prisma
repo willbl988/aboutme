@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Course {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   address   String?
   city      String?
@@ -18,12 +18,13 @@ model Course {
   website   String?
   latitude  Float?
   longitude Float?
-  rating    Float?   // Course rating (e.g., 72.5)
-  slope     Int?     // Slope rating (e.g., 135)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  rating    Float? // Course rating (e.g., 72.5)
+  slope     Int? // Slope rating (e.g., 135)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   Hole      Hole[]
   Round     Round[]
+  TeeTimes  TeeTime[]
 
   @@index([name])
   @@index([city])
@@ -63,8 +64,8 @@ model Round {
   createdById String
   status      String        @default("active")
   mode        String        @default("stroke")
-  wager       String?       // Legacy field, kept for backwards compatibility
-  wagers      Json?         // New field for multiple wagers
+  wager       String? // Legacy field, kept for backwards compatibility
+  wagers      Json? // New field for multiple wagers
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   Mulligan    Mulligan[]
@@ -78,13 +79,13 @@ model RoundPlayer {
   id               String     @id @default(cuid())
   roundId          String
   name             String
-  userId           String?     // Optional link to User account
+  userId           String? // Optional link to User account
   mulligansAllowed Int        @default(0)
   Mulligan         Mulligan[]
   Round            Round      @relation(fields: [roundId], references: [id], onDelete: Cascade)
   User             User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   Score            Score[]
-  
+
   @@index([roundId])
   @@index([userId])
 }
@@ -114,17 +115,22 @@ model Session {
 }
 
 model User {
-  id          String        @id @default(cuid())
-  email       String        @unique
-  name        String
-  password    String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  Round       Round[]
-  Session     Session[]
-  RoundPlayer RoundPlayer[]
-  Team        Team[]        @relation("TeamOwner")
-  TeamMember  TeamMember[]
+  id              String               @id @default(cuid())
+  email           String               @unique
+  name            String
+  password        String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  Round           Round[]
+  Session         Session[]
+  RoundPlayer     RoundPlayer[]
+  Team            Team[]               @relation("TeamOwner")
+  TeamMember      TeamMember[]
+  MessageGroups   MessageGroupMember[]
+  CreatedGroups   MessageGroup[]       @relation("GroupCreator")
+  Messages        Message[]
+  MessageReads    MessageRead[]
+  TeeTimeBookings TeeTimeBooking[]
 }
 
 model Team {
@@ -150,4 +156,93 @@ model TeamMember {
   @@unique([teamId, userId])
   @@index([teamId])
   @@index([userId])
+}
+
+model MessageGroup {
+  id          String               @id @default(cuid())
+  name        String
+  description String?
+  createdById String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  Creator     User                 @relation("GroupCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  Members     MessageGroupMember[]
+  Messages    Message[]
+
+  @@index([createdById])
+}
+
+model MessageGroupMember {
+  id        String       @id @default(cuid())
+  groupId   String
+  userId    String
+  createdAt DateTime     @default(now())
+  Group     MessageGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  User      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  groupId   String
+  userId    String
+  content   String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  Group     MessageGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  User      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Reads     MessageRead[]
+
+  @@index([groupId, createdAt])
+  @@index([userId])
+}
+
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+  Message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model TeeTime {
+  id        String           @id @default(cuid())
+  courseId  String
+  date      DateTime // Date and time of the tee time
+  players   Int              @default(4) // Number of players (spots available)
+  price     Float? // Price per player (optional)
+  status    String           @default("available") // available, booked, cancelled
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  Course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Bookings  TeeTimeBooking[]
+
+  @@index([courseId, date])
+  @@index([date, status])
+  @@index([status])
+}
+
+model TeeTimeBooking {
+  id          String   @id @default(cuid())
+  teeTimeId   String
+  userId      String
+  players     Int      @default(1) // Number of players in this booking
+  playerNames String[] // Names of players (for non-user accounts)
+  status      String   @default("confirmed") // confirmed, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  TeeTime     TeeTime  @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([teeTimeId])
+  @@index([userId])
+  @@index([status])
 }

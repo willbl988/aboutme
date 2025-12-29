@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: '🏠' },
   { href: '/courses', label: 'Courses', icon: '🏌️' },
   { href: '/rounds', label: 'Rounds', icon: '📊' },
+  { href: '/tee-times', label: 'Tee Times', icon: '⛳' },
   { href: '/team', label: 'Team', icon: '👥' },
   { href: '/statistics', label: 'Stats', icon: '📈' },
   { href: '/news', label: 'News', icon: '📰' },

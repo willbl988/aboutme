@@ -54,6 +54,7 @@ export default function Navigation() {
     { href: '/', label: 'Home' },
     { href: '/courses', label: 'Courses' },
     { href: '/rounds', label: 'Rounds' },
+    { href: '/tee-times', label: 'Tee Times' },
     { href: '/team', label: 'Team' },
     { href: '/statistics', label: 'Statistics' },
     { href: '/news', label: 'News' },
