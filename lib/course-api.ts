@@ -738,43 +738,67 @@ function getMockCourses(query: string, limit: number): CourseApiResult[] {
 
 export async function getCourseById(id: string): Promise<CourseApiResult | null> {
   try {
-    switch (API_PROVIDER) {
-      case 'golfcourseapi':
-        if (!GOLF_API_KEY) {
-          console.warn('GOLF_API_KEY not set for GolfCourseAPI')
-          return null
+    const providers = API_PROVIDER.includes(',') 
+      ? API_PROVIDER.split(',').map(p => p.trim())
+      : [API_PROVIDER]
+
+    // Try each provider until we find the course
+    for (const provider of providers) {
+      try {
+        switch (provider) {
+          case 'golfcourseapi':
+            if (!GOLF_API_KEY) {
+              continue
+            }
+            const url = `${GOLFCOURSEAPI_BASE}/courses/${id}`
+            const response = await fetch(url, {
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': `Key ${GOLF_API_KEY}`,
+              },
+            })
+            if (response.ok) {
+              const data = await response.json()
+              const course = data.course || data
+              return convertGolfCourseAPICourse(course)
+            }
+            break
+          case 'golfapiio':
+            if (GOLFAPIIO_KEY) {
+              const golfapiioUrl = `${GOLFAPIIO_BASE}/courses/${id}`
+              const golfapiioResponse = await fetch(golfapiioUrl, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Authorization': `Bearer ${GOLFAPIIO_KEY}`,
+                },
+              })
+              if (golfapiioResponse.ok) {
+                const data = await golfapiioResponse.json()
+                return convertGolfAPIIOCourse(data)
+              }
+            }
+            break
+          case 'custom':
+            if (CUSTOM_API_BASE) {
+              const customUrl = `${CUSTOM_API_BASE}/courses/${id}`
+              const headers: HeadersInit = { 'Accept': 'application/json' }
+              if (GOLF_API_KEY) {
+                headers['Authorization'] = `Bearer ${GOLF_API_KEY}`
+              }
+              const customResponse = await fetch(customUrl, { headers })
+              if (customResponse.ok) {
+                const data = await customResponse.json()
+                return convertCustomAPICourse(data)
+              }
+            }
+            break
         }
-        const url = `${GOLFCOURSEAPI_BASE}/courses/${id}`
-        const response = await fetch(url, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Key ${GOLF_API_KEY}`,
-          },
-        })
-        if (response.ok) {
-          const data = await response.json()
-          // API might return { course: {...} } or just the course object
-          const course = data.course || data
-          return convertGolfCourseAPICourse(course)
-        }
-        return null
-      case 'custom':
-        if (CUSTOM_API_BASE) {
-          const customUrl = `${CUSTOM_API_BASE}/courses/${id}`
-          const headers: HeadersInit = { 'Accept': 'application/json' }
-          if (GOLF_API_KEY) {
-            headers['Authorization'] = `Bearer ${GOLF_API_KEY}`
-          }
-          const customResponse = await fetch(customUrl, { headers })
-          if (customResponse.ok) {
-            const data = await customResponse.json()
-            return convertCustomAPICourse(data)
-          }
-        }
-        return null
-      default:
-        return null
+      } catch (error) {
+        console.error(`[getCourseById] Error with provider ${provider}:`, error)
+        // Continue to next provider
+      }
     }
+    return null
   } catch (error) {
     console.error('Error fetching course:', error)
     return null
