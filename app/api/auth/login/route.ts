@@ -14,13 +14,16 @@ export async function POST(request: NextRequest) {
 
     const user = await login(email, password)
     if (!user) {
+      console.log('Login failed: Invalid credentials for email:', email)
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       )
     }
 
+    console.log('Login successful for user:', user.email)
     const sessionId = await createSession(user.id)
+    console.log('Session created:', sessionId)
 
     const response = NextResponse.json({ success: true, user })
     response.cookies.set('session', sessionId, {
@@ -31,6 +34,7 @@ export async function POST(request: NextRequest) {
       path: '/',
     })
 
+    console.log('Session cookie set in response')
     return response
   } catch (error: any) {
     console.error('Login error:', error)

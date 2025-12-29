@@ -23,6 +23,8 @@ export default function LoginPage() {
         ? { email, name, password }
         : { email, password }
 
+      console.log('Submitting to:', endpoint, 'with body:', { email, ...(isSignUp && { name }) })
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,16 +32,57 @@ export default function LoginPage() {
         credentials: 'include',
       })
 
-      const data = await response.json()
+      console.log('Response status:', response.status, response.statusText)
 
-      if (response.ok) {
-        router.push('/')
-        router.refresh()
+      let data
+      try {
+        const text = await response.text()
+        console.log('Response text:', text)
+        data = text ? JSON.parse(text) : {}
+      } catch (err) {
+        console.error('Failed to parse response:', err)
+        setError('Failed to parse server response. Please check the browser console.')
+        setLoading(false)
+        return
+      }
+
+      console.log('Response data:', data)
+      console.log('Response status:', response.status)
+
+      if (response.ok && data.success !== false) {
+        console.log('Login/Register successful, verifying session...')
+        setLoading(false)
+        
+        // Verify the session is working before redirecting
+        try {
+          const verifyResponse = await fetch('/api/auth/me', {
+            credentials: 'include',
+            cache: 'no-store',
+          })
+          const verifyData = await verifyResponse.json()
+          console.log('Session verification:', verifyData.user ? 'SUCCESS' : 'FAILED')
+          
+          if (verifyData.user) {
+            console.log('Session verified, redirecting to home...')
+            window.location.href = '/'
+          } else {
+            console.error('Session verification failed, showing error')
+            setError('Login successful but session not found. Please try again.')
+            setLoading(false)
+          }
+        } catch (verifyError) {
+          console.error('Session verification error:', verifyError)
+          // Still try to redirect - maybe it will work
+          setTimeout(() => {
+            window.location.href = '/'
+          }, 500)
+        }
       } else {
         // Show more detailed error message
-        const errorMsg = data.error || (isSignUp ? 'Registration failed' : 'Login failed')
+        const errorMsg = data.error || data.details || (isSignUp ? 'Registration failed' : 'Login failed')
         setError(errorMsg)
-        console.error(isSignUp ? 'Registration failed:' : 'Login failed:', errorMsg)
+        console.error(isSignUp ? 'Registration failed:' : 'Login failed:', errorMsg, data)
+        setLoading(false)
       }
     } catch (err) {
       setError('An error occurred. Please try again.')

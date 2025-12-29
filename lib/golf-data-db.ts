@@ -161,7 +161,10 @@ export async function createRound(
     }
   })
 
-  const round = await prisma.round.create({
+  console.log('Creating round with players:', JSON.stringify(playersData, null, 2))
+
+  try {
+    const round = await prisma.round.create({
     data: {
       courseId,
       createdById,
@@ -191,7 +194,17 @@ export async function createRound(
     },
   })
 
-  return round
+    console.log('Round created successfully:', round.id)
+    return round
+  } catch (error: any) {
+    console.error('Error creating round:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+    })
+    throw error
+  }
 }
 
 export async function updateScore(

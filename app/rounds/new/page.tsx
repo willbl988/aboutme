@@ -100,6 +100,11 @@ function NewRoundContent() {
 
     setSubmitting(true)
     try {
+      console.log('Creating round with:', {
+        courseId: selectedCourse.id,
+        players: validPlayers,
+      })
+
       const response = await fetch('/api/rounds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,23 +115,38 @@ function NewRoundContent() {
         }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        if (data.round && data.round.id) {
-          router.push(`/rounds/${data.round.id}`)
+      console.log('Response status:', response.status, response.statusText)
+
+      // Parse response body once
+      const responseData = await response.json().catch((err) => {
+        console.error('Failed to parse response:', err)
+        return { error: 'Failed to parse server response' }
+      })
+      
+      console.log('Response data:', responseData)
+      
+      if (response.ok && responseData) {
+        if (responseData.round && responseData.round.id) {
+          const roundId = responseData.round.id
+          console.log('Round created successfully, redirecting to:', roundId)
+          // Use window.location for more reliable navigation
+          window.location.href = `/rounds/${roundId}`
         } else {
-          console.error('Round created but no ID in response:', data)
+          console.error('Round created but no ID in response:', responseData)
           alert('Round created but failed to redirect. Please check your rounds list.')
           router.push('/rounds')
         }
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('Failed to create round:', errorData)
-        alert(`Failed to create round: ${errorData.details || errorData.error || 'Unknown error'}`)
+        console.error('Failed to create round - full error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: responseData,
+        })
+        alert(`Failed to create round: ${responseData.details || responseData.error || 'Unknown error'}\n\nCheck the browser console for more details.`)
       }
     } catch (error) {
-      console.error('Failed to create round:', error)
-      alert('An error occurred while creating the round')
+      console.error('Failed to create round - exception:', error)
+      alert('An error occurred while creating the round. Check the browser console for details.')
     } finally {
       setSubmitting(false)
     }
