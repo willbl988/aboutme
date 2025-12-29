@@ -81,10 +81,10 @@ export default function WeatherWidget() {
     return (
       <button
         onClick={getWeather}
-        className="flex items-center gap-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
+        className="flex items-center gap-2 px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition"
         title="Click to refresh weather"
       >
-        <span className="text-lg">🌤️</span>
+        <span className="text-lg sm:text-xl">🌤️</span>
       </button>
     )
   }
@@ -120,8 +120,8 @@ export default function WeatherWidget() {
       className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition group"
       title={`${weather.condition}, ${weather.temp}°F - Click to refresh`}
     >
-      <span className="text-base sm:text-lg">{getWeatherEmoji(weather.icon)}</span>
-      <span className="text-xs sm:text-sm font-medium">
+      <span className="text-lg sm:text-xl">{getWeatherEmoji(weather.icon)}</span>
+      <span className="text-sm sm:text-base font-medium">
         {weather.temp}°
       </span>
     </button>
