@@ -40,19 +40,25 @@ export interface CourseData {
 
 // Course functions
 export async function getCourses(searchQuery?: string): Promise<CourseWithHoles[]> {
-  const where = searchQuery
+  // Trim and validate search query
+  const trimmedQuery = searchQuery?.trim()
+  const hasQuery = trimmedQuery && trimmedQuery.length > 0
+
+  console.log(`[getCourses] Search query: "${trimmedQuery}", Has query: ${hasQuery}`)
+
+  const where = hasQuery
     ? {
         OR: [
-          { name: { contains: searchQuery, mode: 'insensitive' as const } },
-          { city: { contains: searchQuery, mode: 'insensitive' as const } },
-          { state: { contains: searchQuery, mode: 'insensitive' as const } },
-          { country: { contains: searchQuery, mode: 'insensitive' as const } },
-          { address: { contains: searchQuery, mode: 'insensitive' as const } },
+          { name: { contains: trimmedQuery, mode: 'insensitive' as const } },
+          { city: { contains: trimmedQuery, mode: 'insensitive' as const } },
+          { state: { contains: trimmedQuery, mode: 'insensitive' as const } },
+          { country: { contains: trimmedQuery, mode: 'insensitive' as const } },
+          { address: { contains: trimmedQuery, mode: 'insensitive' as const } },
         ],
       }
     : undefined
 
-  return prisma.course.findMany({
+  const courses = await prisma.course.findMany({
     where,
     include: {
       Hole: {
@@ -61,6 +67,13 @@ export async function getCourses(searchQuery?: string): Promise<CourseWithHoles[
     },
     orderBy: { createdAt: 'desc' },
   })
+
+  console.log(`[getCourses] Found ${courses.length} courses`)
+  if (hasQuery && courses.length > 0) {
+    console.log(`[getCourses] Sample course names:`, courses.slice(0, 3).map(c => c.name))
+  }
+
+  return courses
 }
 
 export async function getCourse(id: string): Promise<CourseWithHoles | null> {

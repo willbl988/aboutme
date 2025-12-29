@@ -5,7 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const searchQuery = searchParams.get('q') || undefined
+    console.log(`[GET /api/courses] Search query from params: "${searchQuery}"`)
+    
     const courses = await getCourses(searchQuery)
+    console.log(`[GET /api/courses] Returning ${courses.length} courses`)
+    
     return NextResponse.json({ courses })
   } catch (error) {
     console.error('Failed to get courses:', error)

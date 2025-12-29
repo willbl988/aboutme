@@ -84,13 +84,16 @@ export default function CoursesPage() {
 
   const loadCourses = async () => {
     try {
-      const url = searchQuery
-        ? `/api/courses?q=${encodeURIComponent(searchQuery)}`
+      const url = searchQuery && searchQuery.trim()
+        ? `/api/courses?q=${encodeURIComponent(searchQuery.trim())}`
         : '/api/courses'
+      console.log(`[loadCourses] Fetching from: ${url}, searchQuery: "${searchQuery}"`)
+      
       const response = await fetch(url, {
         credentials: 'include',
       })
       const data = await response.json()
+      console.log(`[loadCourses] Received ${data.courses?.length || 0} courses`)
       setCourses(data.courses || [])
     } catch (error) {
       console.error('Failed to load courses:', error)
