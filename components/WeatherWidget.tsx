@@ -51,10 +51,25 @@ export default function WeatherWidget() {
             icon: data.icon,
           })
           setLoading(false)
+          setError(null)
         },
         (error) => {
           console.error('Geolocation error:', error)
-          setError('Location access denied')
+          let errorMessage = 'Location access denied'
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location permission denied. Enable location in browser settings to see weather.'
+              break
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location unavailable'
+              break
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out'
+              break
+          }
+          
+          setError(errorMessage)
           setLoading(false)
         },
         {

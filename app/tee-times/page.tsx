@@ -87,7 +87,7 @@ export default function TeeTimesPage() {
 
   const getLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser')
+      setLocationError('Geolocation is not supported by your browser. Please use a modern browser.')
       return
     }
 
@@ -99,10 +99,28 @@ export default function TeeTimesPage() {
           lon: position.coords.longitude,
         })
         setSearchType('nearby')
+        setLocationError(null)
       },
       (error) => {
         console.error('Geolocation error:', error)
-        setLocationError('Unable to get your location. Please enable location services.')
+        let errorMessage = 'Unable to get your location.'
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location services in your browser settings and try again.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Please check your device settings.'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.'
+            break
+          default:
+            errorMessage = 'Unable to get your location. Please enable location services and try again.'
+            break
+        }
+        
+        setLocationError(errorMessage)
       },
       {
         timeout: 10000,
@@ -401,8 +419,29 @@ export default function TeeTimesPage() {
               </div>
 
               {locationError && (
-                <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-sm">
-                  {locationError}
+                <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">📍</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-2">
+                        {locationError}
+                      </p>
+                      <div className="text-xs text-red-700 dark:text-red-400 mb-3">
+                        <p className="mb-1"><strong>To enable location:</strong></p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Click the lock icon in your browser's address bar</li>
+                          <li>Select "Allow" for location permissions</li>
+                          <li>Or check your device/browser settings</li>
+                        </ul>
+                      </div>
+                      <button
+                        onClick={getLocation}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
