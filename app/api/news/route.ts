@@ -99,7 +99,7 @@ async function parseRSSFeed(url: string, sourceName: string): Promise<NewsArticl
     
     // Simple RSS parsing (for production, consider using a proper RSS parser library)
     const items: NewsArticle[] = []
-    const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g)
+    const itemMatches = Array.from(xml.matchAll(/<item>([\s\S]*?)<\/item>/g))
     
     for (const match of itemMatches) {
       const itemXml = match[1]
