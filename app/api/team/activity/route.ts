@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
       const players = round.RoundPlayer.map(p => {
         const total = p.Score.reduce((sum, s) => sum + s.score, 0)
         return {
-          name: p.User.name,
+          name: p.User?.name || p.name,
           score: total > 0 ? total : null,
         }
       })
