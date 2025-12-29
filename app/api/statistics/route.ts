@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         status: 'completed',
       },
       include: {
-        course: {
+        Course: {
           include: {
             holes: {
               orderBy: { number: 'asc' },
@@ -39,13 +39,13 @@ export async function GET(request: NextRequest) {
 
     // Calculate statistics
     const totalRounds = rounds.length
-    const totalHoles = rounds.reduce((sum, round) => sum + (round.course.holes.length || 18), 0)
+    const totalHoles = rounds.reduce((sum, round) => sum + (round.Course.holes.length || 18), 0)
     
     // Calculate average scores per course
     const courseStats: Record<string, { rounds: number; totalScore: number; averageScore: number; bestScore: number; worstScore: number }> = {}
     
     rounds.forEach((round) => {
-      const courseName = round.course.name
+      const courseName = round.Course.name
       
       // Initialize course stats if not exists
       if (!courseStats[courseName]) {
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
             bestScore = totalScore
             bestRound = {
               id: round.id,
-              courseName: round.course.name,
+              courseName: round.Course.name,
               score: totalScore,
               date: round.createdAt,
             }
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
             worstScore = totalScore
             worstRound = {
               id: round.id,
-              courseName: round.course.name,
+              courseName: round.Course.name,
               score: totalScore,
               date: round.createdAt,
             }
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       worstRound,
       recentRounds: rounds.slice(0, 5).map((round) => ({
         id: round.id,
-        courseName: round.course.name,
+        courseName: round.Course.name,
         date: round.createdAt,
         players: round.players.map((p) => ({
           name: p.name,
