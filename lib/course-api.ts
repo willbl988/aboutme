@@ -169,12 +169,16 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
   const { query, limit = 10 } = params
 
   console.log(`[searchCourses] Provider: ${API_PROVIDER}, Query: "${query}", Limit: ${limit}`)
+  console.log(`[searchCourses] API Key: ${GOLF_API_KEY ? 'Set ✓' : 'Not set ✗'}`)
 
   try {
     // Route to appropriate provider
     let results: CourseApiResult[] = []
     switch (API_PROVIDER) {
       case 'golfcourseapi':
+        if (!GOLF_API_KEY) {
+          console.warn('[searchCourses] ⚠️  GOLF_API_KEY not set - using mock data. Get your API key from https://golfcourseapi.com')
+        }
         results = await searchGolfCourseAPI(query, limit)
         break
       case 'custom':
@@ -186,7 +190,11 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
         }
         break
       case 'mock':
+        console.log('[searchCourses] Using mock data (GOLF_API_PROVIDER=mock)')
+        results = getMockCourses(query, limit)
+        break
       default:
+        console.warn(`[searchCourses] Unknown provider: ${API_PROVIDER}, using mock data`)
         results = getMockCourses(query, limit)
         break
     }
@@ -194,8 +202,9 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
     return results
   } catch (error) {
     console.error('Error searching courses:', error)
+    console.warn('[searchCourses] Error occurred, falling back to mock data')
     const mockResults = getMockCourses(query, limit)
-    console.log(`[searchCourses] Error occurred, returning ${mockResults.length} mock results`)
+    console.log(`[searchCourses] Returning ${mockResults.length} mock results`)
     return mockResults
   }
 }
