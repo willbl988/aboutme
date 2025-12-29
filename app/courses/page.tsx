@@ -7,6 +7,12 @@ import Link from 'next/link'
 interface Course {
   id: string
   name: string
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  phone?: string
+  website?: string
   Hole: { number: number; par: number; yardage?: number }[]
   createdAt: string
 }
@@ -48,6 +54,16 @@ export default function CoursesPage() {
     checkAuth()
   }, [])
 
+  useEffect(() => {
+    if (!loading) {
+      const timeoutId = setTimeout(() => {
+        loadCourses()
+      }, 300) // Debounce search
+      return () => clearTimeout(timeoutId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery])
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/me', {
@@ -68,7 +84,10 @@ export default function CoursesPage() {
 
   const loadCourses = async () => {
     try {
-      const response = await fetch('/api/courses', {
+      const url = searchQuery
+        ? `/api/courses?q=${encodeURIComponent(searchQuery)}`
+        : '/api/courses'
+      const response = await fetch(url, {
         credentials: 'include',
       })
       const data = await response.json()
@@ -140,6 +159,10 @@ export default function CoursesPage() {
             par: hole.par,
             yardage: hole.yardage,
           })),
+          address: apiCourse.address,
+          city: apiCourse.city,
+          state: apiCourse.state,
+          country: apiCourse.country,
         }),
         credentials: 'include',
       })
@@ -435,34 +458,25 @@ export default function CoursesPage() {
           </div>
         )}
 
-        {courses.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">No courses yet. Create your first course to get started!</p>
+        <>
+          <div className="mb-6">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search courses by name, city, state, or address..."
+              className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
           </div>
-        ) : (
-          <>
-            <div className="mb-6">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search courses..."
-                className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
+          {courses.length === 0 ? (
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                {searchQuery ? 'No courses found matching your search.' : 'No courses yet. Create your first course to get started!'}
+              </p>
             </div>
-            {courses.filter((course) =>
-              course.name.toLowerCase().includes(searchQuery.toLowerCase())
-            ).length === 0 ? (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
-                <p className="text-gray-600 dark:text-gray-400 text-lg">No courses found matching your search.</p>
-              </div>
-            ) : (
+          ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses
-                  .filter((course) =>
-                    course.name.toLowerCase().includes(searchQuery.toLowerCase())
-                  )
-                  .map((course) => (
+                {courses.map((course) => (
                     <div
                       key={course.id}
                       className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
@@ -470,6 +484,16 @@ export default function CoursesPage() {
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                         {course.name}
                       </h2>
+                      {(course.city || course.state || course.country) && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          {[course.city, course.state, course.country].filter(Boolean).join(', ')}
+                        </p>
+                      )}
+                      {course.address && (
+                        <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                          {course.address}
+                        </p>
+                      )}
                       <div className="space-y-2 mb-4">
                         <p className="text-gray-600 dark:text-gray-300">
                           {course.Hole.length} holes

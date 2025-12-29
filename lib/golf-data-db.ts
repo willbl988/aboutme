@@ -26,9 +26,34 @@ export interface HoleData {
   yardage?: number
 }
 
+export interface CourseData {
+  name: string
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  phone?: string
+  website?: string
+  latitude?: number
+  longitude?: number
+}
+
 // Course functions
-export async function getCourses(): Promise<CourseWithHoles[]> {
+export async function getCourses(searchQuery?: string): Promise<CourseWithHoles[]> {
+  const where = searchQuery
+    ? {
+        OR: [
+          { name: { contains: searchQuery, mode: 'insensitive' as const } },
+          { city: { contains: searchQuery, mode: 'insensitive' as const } },
+          { state: { contains: searchQuery, mode: 'insensitive' as const } },
+          { country: { contains: searchQuery, mode: 'insensitive' as const } },
+          { address: { contains: searchQuery, mode: 'insensitive' as const } },
+        ],
+      }
+    : undefined
+
   return prisma.course.findMany({
+    where,
     include: {
       Hole: {
         orderBy: { number: 'asc' },
@@ -49,10 +74,22 @@ export async function getCourse(id: string): Promise<CourseWithHoles | null> {
   })
 }
 
-export async function createCourse(name: string, holes: HoleData[]): Promise<CourseWithHoles> {
+export async function createCourse(
+  name: string,
+  holes: HoleData[],
+  courseData?: Partial<CourseData>
+): Promise<CourseWithHoles> {
   return prisma.course.create({
     data: {
       name,
+      address: courseData?.address,
+      city: courseData?.city,
+      state: courseData?.state,
+      country: courseData?.country,
+      phone: courseData?.phone,
+      website: courseData?.website,
+      latitude: courseData?.latitude,
+      longitude: courseData?.longitude,
       Hole: {
         create: holes.map((hole) => ({
           number: hole.number,

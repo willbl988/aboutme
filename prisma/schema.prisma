@@ -10,10 +10,23 @@ datasource db {
 model Course {
   id        String   @id @default(cuid())
   name      String
+  address   String?
+  city      String?
+  state     String?
+  country   String?
+  phone     String?
+  website   String?
+  latitude  Float?
+  longitude Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Hole      Hole[]
   Round     Round[]
+
+  @@index([name])
+  @@index([city])
+  @@index([state])
+  @@index([country])
 }
 
 model Hole {
