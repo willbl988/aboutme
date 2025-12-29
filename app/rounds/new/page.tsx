@@ -72,7 +72,14 @@ function NewRoundContent() {
   }
 
   const addPlayer = () => {
-    setPlayers([...players, { id: String(Date.now()), name: '', mulligansEnabled: false }])
+    // If first player has mulligans enabled, new players should also have them enabled
+    const firstPlayerMulligansEnabled = players.length > 0 ? players[0].mulligansEnabled : false
+    setPlayers([...players, { 
+      id: String(Date.now()), 
+      name: '', 
+      mulligansEnabled: firstPlayerMulligansEnabled,
+      mulligansAllowed: firstPlayerMulligansEnabled ? (players[0]?.mulligansAllowed || 0) : 0
+    }])
   }
 
   const removePlayer = (id: string) => {
