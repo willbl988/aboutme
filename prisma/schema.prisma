@@ -63,12 +63,15 @@ model RoundPlayer {
   id               String     @id @default(cuid())
   roundId          String
   name             String
+  userId           String?     // Optional link to User account
   mulligansAllowed Int        @default(0)
   Mulligan         Mulligan[]
   Round            Round      @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  User             User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   Score            Score[]
-
+  
   @@index([roundId])
+  @@index([userId])
 }
 
 model Score {
@@ -96,12 +99,13 @@ model Session {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Round     Round[]
-  Session   Session[]
+  id          String        @id @default(cuid())
+  email       String        @unique
+  name        String
+  password    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Round       Round[]
+  Session     Session[]
+  RoundPlayer RoundPlayer[]
 }

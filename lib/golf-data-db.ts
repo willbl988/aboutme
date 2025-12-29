@@ -16,6 +16,7 @@ export interface RoundWithDetails extends Round {
 export interface Player {
   id: string
   name: string
+  userId?: string // Optional user account ID
   mulligansAllowed?: number
 }
 
@@ -155,7 +156,7 @@ export async function createRound(
     throw new Error('Course not found')
   }
 
-  // Ensure mulligansAllowed is a valid integer
+  // Ensure mulligansAllowed is a valid integer and include userId if present
   const playersData = players.map((player) => {
     let mulligans = 0
     if (player.mulligansAllowed !== undefined && player.mulligansAllowed !== null) {
@@ -163,10 +164,19 @@ export async function createRound(
         ? Math.max(0, Math.floor(player.mulligansAllowed))
         : parseInt(String(player.mulligansAllowed), 10) || 0
     }
-    return {
+    const playerData: {
+      name: string
+      mulligansAllowed: number
+      userId?: string
+    } = {
       name: player.name,
       mulligansAllowed: mulligans,
     }
+    // Only include userId if it's actually present
+    if (player.userId) {
+      playerData.userId = player.userId
+    }
+    return playerData
   })
 
   console.log('Creating round with players:', JSON.stringify(playersData, null, 2))

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import WagerManager from '@/components/WagerManager'
 import type { Wager } from '@/lib/wager-types'
@@ -14,6 +14,7 @@ interface Course {
 interface Player {
   id: string
   name: string
+  userId?: string // Optional user account ID
   mulligansAllowed?: number
   mulligansEnabled?: boolean
 }
@@ -31,6 +32,9 @@ function NewRoundContent() {
   const [wagers, setWagers] = useState<Wager[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [userSearchResults, setUserSearchResults] = useState<Map<string, Array<{ id: string; name: string; email: string }>>>(new Map())
+  const [activeSearchPlayerId, setActiveSearchPlayerId] = useState<string | null>(null)
+  const searchTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map())
 
   useEffect(() => {
     checkAuth()
@@ -93,8 +97,70 @@ function NewRoundContent() {
     }
   }
 
+  const searchUsers = async (query: string, playerId: string) => {
+    // Clear existing timeout for this player
+    const existingTimeout = searchTimeoutRef.current.get(playerId)
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+    }
+
+    if (!query || query.trim().length < 2) {
+      setUserSearchResults(prev => {
+        const newMap = new Map(prev)
+        newMap.delete(playerId)
+        return newMap
+      })
+      return
+    }
+
+    // Debounce search
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(query.trim())}`, {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUserSearchResults(prev => {
+            const newMap = new Map(prev)
+            newMap.set(playerId, data.users || [])
+            return newMap
+          })
+        }
+      } catch (error) {
+        console.error('Failed to search users:', error)
+      }
+    }, 300) // 300ms debounce
+
+    searchTimeoutRef.current.set(playerId, timeout)
+  }
+
   const updatePlayerName = (id: string, name: string) => {
-    setPlayers(players.map(p => (p.id === id ? { ...p, name } : p)))
+    setPlayers(players.map(p => (p.id === id ? { ...p, name, userId: undefined } : p)))
+    // Trigger user search
+    searchUsers(name, id)
+    // Clear search results if name is cleared
+    if (!name.trim()) {
+      setUserSearchResults(prev => {
+        const newMap = new Map(prev)
+        newMap.delete(id)
+        return newMap
+      })
+    }
+  }
+
+  const selectUser = (playerId: string, user: { id: string; name: string; email: string }) => {
+    setPlayers(players.map(p => 
+      p.id === playerId 
+        ? { ...p, name: user.name, userId: user.id } 
+        : p
+    ))
+    setUserSearchResults(prev => {
+      const newMap = new Map(prev)
+      newMap.delete(playerId)
+      return newMap
+    })
+    setActiveSearchPlayerId(null)
   }
 
   const updatePlayerMulligans = (id: string, value: string) => {
@@ -149,6 +215,7 @@ function NewRoundContent() {
 
     const validPlayers = players.filter(p => p.name.trim()).map(p => ({
       name: p.name,
+      userId: p.userId, // Include userId if linked to user account
       mulligansAllowed: p.mulligansEnabled ? (p.mulligansAllowed || 0) : 0
     }))
     if (validPlayers.length === 0) {
@@ -301,16 +368,48 @@ function NewRoundContent() {
             </div>
 
             <div className="space-y-4">
-              {players.map((player, index) => (
-                <div key={player.id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
-                  <input
-                    type="text"
-                    value={player.name}
-                    onChange={(e) => updatePlayerName(player.id, e.target.value)}
-                    placeholder={`Player ${index + 1} name`}
-                    className="flex-1 w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  />
-                  <div className="flex items-center gap-2 sm:gap-2">
+              {players.map((player, index) => {
+                const searchResults = userSearchResults.get(player.id) || []
+                const showResults = activeSearchPlayerId === player.id && searchResults.length > 0 && !player.userId
+                
+                return (
+                <div key={player.id} className="flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={player.name}
+                        onChange={(e) => updatePlayerName(player.id, e.target.value)}
+                        onFocus={() => setActiveSearchPlayerId(player.id)}
+                        onBlur={() => {
+                          // Delay to allow clicking on results
+                          setTimeout(() => setActiveSearchPlayerId(null), 200)
+                        }}
+                        placeholder={`Player ${index + 1} name`}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                      {player.userId && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
+                          ✓ Linked
+                        </span>
+                      )}
+                      {showResults && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {searchResults.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => selectUser(player.id, user)}
+                              className="w-full text-left px-4 py-2 hover:bg-green-50 dark:hover:bg-green-900/20 transition text-sm"
+                            >
+                              <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-2">
                     <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap flex items-center gap-2">
                       <span>Mulligans:</span>
                       <button
@@ -344,17 +443,19 @@ function NewRoundContent() {
                       />
                     )}
                   </div>
-                  {players.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removePlayer(player.id)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm sm:text-base w-full sm:w-auto"
-                    >
-                      Remove
-                    </button>
-                  )}
+                    {players.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removePlayer(player.id)}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm sm:text-base w-full sm:w-auto"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ))}
+              )}
+              )}
             </div>
           </div>
 

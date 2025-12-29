@@ -350,7 +350,7 @@ export default function RoundDetailPage() {
                         </div>
                         {net.breakdown.length > 0 && (
                           <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                            {net.breakdown.map((item, idx) => (
+                            {net.breakdown.map((item: { to: string; amount: number; reason: string }, idx) => (
                               <div key={idx}>
                                 {item.amount > 0 ? (
                                   <span>Receives ${item.amount.toFixed(2)} from {item.to}</span>
