@@ -136,7 +136,8 @@ export async function getRound(id: string): Promise<RoundWithDetails | null> {
 export async function createRound(
   courseId: string,
   createdById: string,
-  players: Player[]
+  players: Player[],
+  mode: string = 'stroke'
 ): Promise<RoundWithDetails> {
   // Get course to include in response
   const course = await prisma.course.findUnique({
@@ -174,6 +175,7 @@ export async function createRound(
       courseId,
       createdById,
       status: 'active',
+      mode: mode || 'stroke',
       RoundPlayer: {
         create: playersData,
       },

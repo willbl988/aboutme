@@ -7,6 +7,7 @@ import Link from 'next/link'
 interface Round {
   id: string
   courseId: string
+  mode?: string
   Course: {
     id: string
     name: string
@@ -166,9 +167,20 @@ export default function RoundsPage() {
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                         {round.Course.name}
                       </h2>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {new Date(round.createdAt).toLocaleDateString()}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                          {new Date(round.createdAt).toLocaleDateString()}
+                        </p>
+                        {round.mode && round.mode !== 'stroke' && (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                            {round.mode === 'scramble' && 'Scramble'}
+                            {round.mode === 'bestball' && 'Best Ball'}
+                            {round.mode === 'alternate' && 'Alternate Shot'}
+                            {round.mode === 'match' && 'Match Play'}
+                            {!['scramble', 'bestball', 'alternate', 'match'].includes(round.mode) && round.mode}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                   <div className="flex items-center gap-3">

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { courseId, players } = await request.json()
+    const { courseId, players, mode } = await request.json()
 
     if (!courseId || !players || !Array.isArray(players)) {
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const round = await createRound(courseId, user.id, players)
+    const round = await createRound(courseId, user.id, players, mode || 'stroke')
     return NextResponse.json({ round })
   } catch (error: any) {
     console.error('Failed to create round:', error)

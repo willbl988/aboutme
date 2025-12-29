@@ -47,6 +47,7 @@ model Round {
   courseId    String
   createdById String
   status      String        @default("active")
+  mode        String        @default("stroke")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   Mulligan    Mulligan[]

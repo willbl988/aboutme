@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 interface Round {
   id: string
   courseId: string
+  mode?: string
   Course: {
     id: string
     name: string
@@ -214,9 +215,20 @@ export default function RoundDetailPage() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
               {round.Course.name}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-              {new Date(round.createdAt).toLocaleDateString()}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+                {new Date(round.createdAt).toLocaleDateString()}
+              </p>
+              {round.mode && round.mode !== 'stroke' && (
+                <span className="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                  {round.mode === 'scramble' && 'Scramble'}
+                  {round.mode === 'bestball' && 'Best Ball'}
+                  {round.mode === 'alternate' && 'Alternate Shot'}
+                  {round.mode === 'match' && 'Match Play'}
+                  {!['scramble', 'bestball', 'alternate', 'match'].includes(round.mode) && round.mode}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
             {round.status === 'active' && (

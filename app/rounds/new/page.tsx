@@ -24,6 +24,7 @@ function NewRoundContent() {
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [players, setPlayers] = useState<Player[]>([{ id: '1', name: '', mulligansEnabled: false }])
+  const [gameMode, setGameMode] = useState<string>('stroke')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -158,6 +159,7 @@ function NewRoundContent() {
         body: JSON.stringify({
           courseId: selectedCourse.id,
           players: validPlayers,
+          mode: gameMode,
         }),
       })
 
@@ -234,6 +236,30 @@ function NewRoundContent() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+              Game Mode
+            </label>
+            <select
+              value={gameMode}
+              onChange={(e) => setGameMode(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            >
+              <option value="stroke">Stroke Play (Standard)</option>
+              <option value="scramble">Scramble</option>
+              <option value="bestball">Best Ball</option>
+              <option value="alternate">Alternate Shot</option>
+              <option value="match">Match Play</option>
+            </select>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              {gameMode === 'stroke' && 'Each player plays their own ball, total score counts'}
+              {gameMode === 'scramble' && 'All players hit, choose best shot, all play from there'}
+              {gameMode === 'bestball' && 'Each player plays their own ball, best score per hole counts'}
+              {gameMode === 'alternate' && 'Players alternate shots on each hole'}
+              {gameMode === 'match' && 'Hole-by-hole competition, win/lose/tie each hole'}
+            </p>
           </div>
 
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
