@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getRound, updateScore, completeRound } from '@/lib/golf-data-db'
+import { getRound, updateScore, completeRound, deleteRound } from '@/lib/golf-data-db'
 
 export async function GET(
   request: NextRequest,
@@ -67,6 +67,39 @@ export async function PATCH(
     )
   } catch (error) {
     console.error('Failed to update round:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Round ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const success = await deleteRound(id)
+
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Failed to delete round' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Failed to delete round:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

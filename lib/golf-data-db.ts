@@ -215,3 +215,16 @@ export async function completeRound(roundId: string): Promise<boolean> {
   }
 }
 
+export async function deleteRound(id: string): Promise<boolean> {
+  try {
+    // Prisma will cascade delete players and scores due to onDelete: Cascade in schema
+    await prisma.round.delete({
+      where: { id },
+    })
+    return true
+  } catch (error) {
+    console.error('Failed to delete round:', error)
+    return false
+  }
+}
+

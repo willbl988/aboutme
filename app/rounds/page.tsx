@@ -29,6 +29,7 @@ export default function RoundsPage() {
   const [rounds, setRounds] = useState<Round[]>([])
   const [loading, setLoading] = useState(true)
   const [showActiveOnly, setShowActiveOnly] = useState(true)
+  const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null)
 
   useEffect(() => {
     checkAuth()
@@ -69,6 +70,35 @@ export default function RoundsPage() {
     const player = round.players?.find(p => p.id === playerId)
     if (!player || !player.scores) return 0
     return player.scores.reduce((sum: number, score: { score: number }) => sum + score.score, 0)
+  }
+
+  const handleDeleteRound = async (e: React.MouseEvent, roundId: string, courseName: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!confirm(`Are you sure you want to delete this round at "${courseName}"? This will delete all scores and player data for this round. This action cannot be undone.`)) {
+      return
+    }
+
+    setDeletingRoundId(roundId)
+    try {
+      const response = await fetch(`/api/rounds/${roundId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        loadRounds()
+      } else {
+        const data = await response.json()
+        alert(`Failed to delete round: ${data.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete round:', error)
+      alert('Failed to delete round. Please try again.')
+    } finally {
+      setDeletingRoundId(null)
+    }
   }
 
   if (loading) {
@@ -123,48 +153,64 @@ export default function RoundsPage() {
         ) : (
           <div className="space-y-6">
             {rounds.map((round) => (
-              <Link
+              <div
                 key={round.id}
-                href={`/rounds/${round.id}`}
-                className="block bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all"
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                      {round.course.name}
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {new Date(round.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      round.status === 'active'
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                    }`}
+                  <Link
+                    href={`/rounds/${round.id}`}
+                    className="flex-1"
                   >
-                    {round.status}
-                  </span>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        {round.course.name}
+                      </h2>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        {new Date(round.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        round.status === 'active'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                      }`}
+                    >
+                      {round.status}
+                    </span>
+                    <button
+                      onClick={(e) => handleDeleteRound(e, round.id, round.course.name)}
+                      disabled={deletingRoundId === round.id}
+                      className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg font-semibold hover:bg-red-200 dark:hover:bg-red-900/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Delete round"
+                    >
+                      {deletingRoundId === round.id ? 'Deleting...' : '🗑️'}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  {round.players.map((player) => {
-                    const total = getTotalScore(round, player.id)
-                    return (
-                      <div key={player.id} className="text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {player.name}
-                        </p>
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                          {total || '-'}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                      </div>
-                    )
-                  })}
-                </div>
-              </Link>
+                <Link href={`/rounds/${round.id}`}>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {round.players.map((player) => {
+                      const total = getTotalScore(round, player.id)
+                      return (
+                        <div key={player.id} className="text-center">
+                          <p className="font-semibold text-gray-900 dark:text-white">
+                            {player.name}
+                          </p>
+                          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                            {total || '-'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         )}

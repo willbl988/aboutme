@@ -17,27 +17,40 @@ export default function Home() {
 
   useEffect(() => {
     checkAuth()
+    
+    // Fallback: ensure loading is set to false after 15 seconds max
+    const fallbackTimeout = setTimeout(() => {
+      console.warn('Auth check timed out, forcing loading to false')
+      setLoading(false)
+    }, 15000)
+    
+    return () => clearTimeout(fallbackTimeout)
   }, [])
 
   useEffect(() => {
     // Redirect to login if no user after loading completes
     if (!loading && !user) {
-      const timer = setTimeout(() => {
-        window.location.href = '/login'
-      }, 500)
-      return () => clearTimeout(timer)
+      // Use router.push for better Next.js navigation
+      router.push('/login')
     }
-  }, [loading, user])
+  }, [loading, user, router])
 
   const checkAuth = async () => {
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
         cache: 'no-store',
+        signal: controller.signal,
       })
       
+      clearTimeout(timeoutId)
+      
       if (!response.ok) {
-        throw new Error('Auth check failed')
+        throw new Error(`Auth check failed: ${response.status}`)
       }
       
       const data = await response.json()
@@ -45,9 +58,14 @@ export default function Home() {
         setUser(data.user)
       }
       setLoading(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth check error:', error)
+      // Always set loading to false, even on error
       setLoading(false)
+      // If it's a network error or timeout, still try to redirect
+      if (error.name === 'AbortError' || error.message?.includes('fetch')) {
+        console.log('Network error or timeout, redirecting to login')
+      }
     }
   }
 
