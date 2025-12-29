@@ -242,7 +242,12 @@ async function fetchAndCacheCourses(): Promise<CourseApiResult[]> {
       })
 
       if (!response.ok) {
-        console.warn(`API error on page ${page}: ${response.status}`)
+        const errorText = await response.text().catch(() => 'Unable to read error')
+        console.error(`[fetchAndCacheCourses] API error on page ${page}: ${response.status} ${response.statusText}`)
+        console.error(`[fetchAndCacheCourses] Error details:`, errorText.substring(0, 500))
+        if (response.status === 401) {
+          console.error('[fetchAndCacheCourses] ⚠️  Authentication failed - check your API key')
+        }
         break
       }
 
@@ -251,18 +256,23 @@ async function fetchAndCacheCourses(): Promise<CourseApiResult[]> {
       // Get total pages from metadata if available
       if (data.metadata && !totalPages) {
         totalPages = data.metadata.last_page
-        console.log(`API has ${data.metadata.total_records} courses across ${totalPages} pages`)
+        console.log(`[fetchAndCacheCourses] API has ${data.metadata.total_records} courses across ${totalPages} pages`)
       }
       
       // Convert API response to our format
       let pageCourses: CourseApiResult[] = []
       if (data.courses && Array.isArray(data.courses)) {
         pageCourses = data.courses.map(convertGolfCourseAPICourse).filter(Boolean) as CourseApiResult[]
+        console.log(`[fetchAndCacheCourses] Page ${page}: Converted ${pageCourses.length} courses from ${data.courses.length} API results`)
       } else if (Array.isArray(data)) {
         pageCourses = data.map(convertGolfCourseAPICourse).filter(Boolean) as CourseApiResult[]
+        console.log(`[fetchAndCacheCourses] Page ${page}: Converted ${pageCourses.length} courses from array response`)
+      } else {
+        console.warn(`[fetchAndCacheCourses] Page ${page}: Unexpected response format:`, Object.keys(data))
       }
 
       if (pageCourses.length === 0) {
+        console.log(`[fetchAndCacheCourses] Page ${page}: No courses converted, stopping`)
         break
       }
 
@@ -315,13 +325,15 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
       return []
     }
 
-    console.log(`Searching through ${allCourses.length} cached courses for: "${query}"`)
+    console.log(`[searchGolfCourseAPI] Searching through ${allCourses.length} cached courses for: "${query}"`)
 
     // Client-side filtering: The API's search parameter doesn't work properly
     // So we filter and rank the results ourselves based on the query
     if (query && query.trim().length > 0) {
       const queryLower = query.toLowerCase().trim()
       const searchTerms = queryLower.split(/\s+/)
+      
+      console.log(`[searchGolfCourseAPI] Search terms:`, searchTerms)
       
       // Score and filter courses based on relevance
       const scoredCourses = allCourses
@@ -330,15 +342,17 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
             course.name,
             course.city,
             course.state,
+            course.country,
+            course.address,
           ]
             .filter(Boolean)
             .join(' ')
             .toLowerCase()
 
-          // Check if all search terms match
-          const allTermsMatch = searchTerms.every((term) => searchableText.includes(term))
+          // Check if any search term matches (changed from all to any for better results)
+          const anyTermMatches = searchTerms.some((term) => searchableText.includes(term))
           
-          if (!allTermsMatch) {
+          if (!anyTermMatches) {
             return null
           }
 
@@ -365,7 +379,15 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
         .sort((a, b) => b.score - a.score) // Sort by relevance (highest first)
         .map((item) => item.course)
 
-      console.log(`Found ${scoredCourses.length} matching courses`)
+      console.log(`[searchGolfCourseAPI] Found ${scoredCourses.length} matching courses for "${query}"`)
+      if (scoredCourses.length === 0 && allCourses.length > 0) {
+        // Log sample course data for debugging
+        console.log(`[searchGolfCourseAPI] Sample courses in cache (first 3):`, allCourses.slice(0, 3).map(c => ({
+          name: c.name,
+          city: c.city,
+          state: c.state,
+        })))
+      }
       return scoredCourses.slice(0, limit)
     }
 
