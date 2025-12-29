@@ -393,33 +393,67 @@ export default function CoursesPage() {
     setImportingCourseId(apiCourse.id)
     try {
       console.log('[importCourse] Importing course:', apiCourse.name)
+      console.log('[importCourse] Course data:', {
+        name: apiCourse.name,
+        holesCount: apiCourse.holes?.length,
+        city: apiCourse.city,
+        state: apiCourse.state,
+      })
+      
+      // Ensure holes array is valid and has required fields
+      if (!apiCourse.holes || apiCourse.holes.length === 0) {
+        alert('Cannot import course: No hole data available. This course may need to be created manually.')
+        setImportingCourseId(null)
+        return
+      }
+      
+      // Validate and format holes
+      const formattedHoles = apiCourse.holes
+        .filter(hole => hole && typeof hole.number === 'number' && typeof hole.par === 'number')
+        .map((hole) => ({
+          number: hole.number,
+          par: hole.par || 4, // Default to par 4 if missing
+          yardage: hole.yardage || 0, // Default to 0 if missing
+        }))
+      
+      if (formattedHoles.length === 0) {
+        alert('Cannot import course: Invalid hole data. This course may need to be created manually.')
+        setImportingCourseId(null)
+        return
+      }
+      
+      const requestBody = {
+        name: apiCourse.name,
+        holes: formattedHoles,
+        address: apiCourse.address || undefined,
+        city: apiCourse.city || undefined,
+        state: apiCourse.state || undefined,
+        country: apiCourse.country || undefined,
+        rating: apiCourse.rating || undefined,
+        slope: apiCourse.slope || undefined,
+      }
+      
+      console.log('[importCourse] Request body:', requestBody)
       
       const response = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: apiCourse.name,
-          holes: apiCourse.holes.map((hole) => ({
-            number: hole.number,
-            par: hole.par,
-            yardage: hole.yardage,
-          })),
-          address: apiCourse.address,
-          city: apiCourse.city,
-          state: apiCourse.state,
-          country: apiCourse.country,
-          rating: apiCourse.rating,
-          slope: apiCourse.slope,
-        }),
+        body: JSON.stringify(requestBody),
         credentials: 'include',
       })
 
       console.log('[importCourse] Response status:', response.status)
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorText = await response.text().catch(() => 'Unable to read error')
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { error: errorText || 'Unknown error' }
+        }
         console.error('[importCourse] Error response:', errorData)
-        alert(`Failed to import course: ${errorData.error || 'Unknown error'}`)
+        alert(`Failed to import course: ${errorData.error || errorData.details || 'Unknown error'}\n\nCheck the browser console for more details.`)
         setImportingCourseId(null)
         return
       }
@@ -440,7 +474,7 @@ export default function CoursesPage() {
       alert(`Successfully imported "${apiCourse.name}"!`)
     } catch (error) {
       console.error('[importCourse] Failed to import course:', error)
-      alert(`Failed to import course: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(`Failed to import course: ${error instanceof Error ? error.message : 'Unknown error'}\n\nCheck the browser console for more details.`)
     } finally {
       setImportingCourseId(null)
     }

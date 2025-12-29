@@ -634,16 +634,24 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
          .filter((course): course is CourseApiResult => {
            if (!course) return false
            
-           // For state searches, ONLY return courses from that state - be strict!
+           const courseStateUpper = course.state?.toUpperCase() || ''
+           const courseStateLower = course.state?.toLowerCase() || ''
+           
+           // Build searchable text
+           const searchableText = [
+             course.name,
+             course.city,
+             course.state,
+             course.country,
+             course.address,
+           ]
+             .filter(Boolean)
+             .join(' ')
+             .toLowerCase()
+           
+           // For state searches, prioritize state matches but also allow name/city matches
            if (isStateSearch && stateAbbr) {
-             if (!course.state) {
-               return false // No state info, exclude it
-             }
-             
-             const courseStateUpper = course.state.toUpperCase()
-             const courseStateLower = course.state.toLowerCase()
-             
-             // Check if course state matches the state abbreviation or full name
+             // First check if state matches
              const stateMatches = expandedTerms.some(term => {
                const termUpper = term.toUpperCase()
                const termLower = term.toLowerCase()
@@ -673,28 +681,21 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
                return false
              })
              
-             // For state searches, ONLY return if state matches - don't check other fields
-             return stateMatches
+             // If state matches, include it
+             if (stateMatches) {
+               return true
+             }
+             
+             // Also include if name/city matches (might be a course in that state)
+             return expandedTerms.some((term) => {
+               return searchableText.includes(term.toLowerCase())
+             })
            }
            
-           // For non-state searches, check searchable text
-           const searchableText = [
-             course.name,
-             course.city,
-             course.state,
-             course.country,
-             course.address,
-           ]
-             .filter(Boolean)
-             .join(' ')
-             .toLowerCase()
-           
-           // Check if any expanded term matches
-           const hasMatch = expandedTerms.some((term) => {
+           // For non-state searches, check if any expanded term matches searchable text
+           return expandedTerms.some((term) => {
              return searchableText.includes(term.toLowerCase())
            })
-           
-           return hasMatch
          })
       
       console.log(`[searchGolfCourseAPI] After filtering: ${apiSearchResults.length} relevant courses`)
@@ -729,43 +730,50 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
 
             // Check if any search term matches (including expanded state variations)
             const anyTermMatches = (() => {
-              // For state searches, ONLY match if the course is in that state
+              // For state searches, prioritize state matches but also allow name/city matches
               if (isStateSearch && stateAbbr) {
-                if (!course.state) {
-                  return false
-                }
-                
-                const courseStateUpper = course.state.toUpperCase()
-                const courseStateLower = course.state.toLowerCase()
-                
-                // Check if course state matches any expanded term
-                return expandedTerms.some(term => {
-                  const termUpper = term.toUpperCase()
-                  const termLower = term.toLowerCase()
+                // First check if state matches
+                if (course.state) {
+                  const courseStateUpper = course.state.toUpperCase()
+                  const courseStateLower = course.state.toLowerCase()
                   
-                  // Exact match (case-insensitive)
-                  if (courseStateUpper === termUpper || courseStateLower === termLower) {
-                    return true
-                  }
-                  
-                  // For 2-letter abbreviations, check exact match
-                  if (term.length === 2 && courseStateUpper === termUpper) {
-                    return true
-                  }
-                  
-                  // Check if term is a state name and course state is the abbreviation
-                  if (STATE_MAPPINGS[termLower] && STATE_MAPPINGS[termLower].includes(courseStateLower)) {
-                    return true
-                  }
-                  
-                  // Check if term is an abbreviation and course state is the full name
-                  for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
-                    if (abbreviations.includes(termLower) && stateName === courseStateLower) {
+                  const stateMatches = expandedTerms.some(term => {
+                    const termUpper = term.toUpperCase()
+                    const termLower = term.toLowerCase()
+                    
+                    // Exact match (case-insensitive)
+                    if (courseStateUpper === termUpper || courseStateLower === termLower) {
                       return true
                     }
-                  }
+                    
+                    // For 2-letter abbreviations, check exact match
+                    if (term.length === 2 && courseStateUpper === termUpper) {
+                      return true
+                    }
+                    
+                    // Check if term is a state name and course state is the abbreviation
+                    if (STATE_MAPPINGS[termLower] && STATE_MAPPINGS[termLower].includes(courseStateLower)) {
+                      return true
+                    }
+                    
+                    // Check if term is an abbreviation and course state is the full name
+                    for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+                      if (abbreviations.includes(termLower) && stateName === courseStateLower) {
+                        return true
+                      }
+                    }
+                    
+                    return false
+                  })
                   
-                  return false
+                  if (stateMatches) {
+                    return true
+                  }
+                }
+                
+                // Also allow name/city matches (might be a course in that state)
+                return expandedTerms.some(term => {
+                  return searchableText.includes(term.toLowerCase())
                 })
               }
               
