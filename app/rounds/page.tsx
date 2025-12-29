@@ -126,7 +126,7 @@ export default function RoundsPage() {
                   : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50'
               }`}
             >
-              {showActiveOnly ? 'Active Only' : 'All Rounds'}
+              {showActiveOnly ? 'Show All Rounds' : 'Show Active Only'}
             </button>
             <Link
               href="/rounds/new"
