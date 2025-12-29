@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        players: {
+        RoundPlayer: {
           include: {
-            scores: true,
+            Score: true,
           },
         },
       },
@@ -60,9 +60,9 @@ export async function GET(request: NextRequest) {
       
       // Count this round once per course
       // Get the best player score for this round (or average if multiple players)
-      const playerScores = round.players
-        .filter(p => p.scores.length > 0)
-        .map(p => p.scores.reduce((sum, score) => sum + score.score, 0))
+      const playerScores = round.RoundPlayer
+        .filter(p => p.Score.length > 0)
+        .map(p => p.Score.reduce((sum, score) => sum + score.score, 0))
       
       if (playerScores.length > 0) {
         // Use the lowest score (best round) for this course
@@ -89,9 +89,9 @@ export async function GET(request: NextRequest) {
     let worstScore = 0
 
     rounds.forEach((round) => {
-      round.players.forEach((player) => {
-        const totalScore = player.scores.reduce((sum, score) => sum + score.score, 0)
-        if (player.scores.length > 0) {
+      round.RoundPlayer.forEach((player) => {
+        const totalScore = player.Score.reduce((sum, score) => sum + score.score, 0)
+        if (player.Score.length > 0) {
           if (totalScore < bestScore && totalScore > 0) {
             bestScore = totalScore
             bestRound = {
@@ -127,9 +127,9 @@ export async function GET(request: NextRequest) {
         id: round.id,
         courseName: round.Course.name,
         date: round.createdAt,
-        players: round.players.map((p) => ({
+        players: round.RoundPlayer.map((p) => ({
           name: p.name,
-          score: p.scores.reduce((sum, s) => sum + s.score, 0),
+          score: p.Score.reduce((sum, s) => sum + s.score, 0),
         })),
       })),
     })
