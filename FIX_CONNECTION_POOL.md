@@ -35,12 +35,16 @@ DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-us-west-2.poo
 #### For Vercel (Environment Variables):
 1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 2. Find `DATABASE_URL`
-3. Update it to use port **6543** and add `?pgbouncer=true&connection_limit=1`
-4. Example:
+3. **IMPORTANT**: Make sure it uses port **6543** (NOT 5432) and includes `?pgbouncer=true&connection_limit=1`
+4. Example (correct format):
    ```
    postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-us-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
    ```
-5. **Redeploy** your application
+   **Note**: Port is **6543**, not 5432!
+5. If your current DATABASE_URL uses port 5432, change it to 6543
+6. **Redeploy** your application after updating
+
+**Quick Check**: Your DATABASE_URL should contain `:6543` not `:5432`
 
 ### Important Parameters:
 - `pgbouncer=true`: Tells Prisma to use connection pooling mode
