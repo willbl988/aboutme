@@ -90,10 +90,35 @@ function NewRoundContent() {
   }
 
   const toggleMulligans = (id: string) => {
-    setPlayers(players.map(p => {
+    const playerIndex = players.findIndex(p => p.id === id)
+    const isFirstPlayer = playerIndex === 0
+    const currentPlayer = players[playerIndex]
+    const newEnabledState = !currentPlayer.mulligansEnabled
+
+    setPlayers(players.map((p, index) => {
+      // If first player is enabling mulligans, enable for all players
+      if (isFirstPlayer && newEnabledState) {
+        return {
+          ...p,
+          mulligansEnabled: true,
+          mulligansAllowed: p.mulligansAllowed || 0
+        }
+      }
+      // If first player is disabling mulligans, disable for all players
+      if (isFirstPlayer && !newEnabledState) {
+        return {
+          ...p,
+          mulligansEnabled: false,
+          mulligansAllowed: 0
+        }
+      }
+      // For other players, just toggle their own state
       if (p.id === id) {
-        const enabled = !p.mulligansEnabled
-        return { ...p, mulligansEnabled: enabled, mulligansAllowed: enabled ? (p.mulligansAllowed || 0) : 0 }
+        return {
+          ...p,
+          mulligansEnabled: newEnabledState,
+          mulligansAllowed: newEnabledState ? (p.mulligansAllowed || 0) : 0
+        }
       }
       return p
     }))
