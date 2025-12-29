@@ -179,7 +179,7 @@ export async function createRound(
       status: 'active',
       mode: mode || 'stroke',
       wager: wager || null, // Legacy field
-      wagers: wagers && wagers.length > 0 ? wagers : null, // New wagers array
+      wagers: wagers && wagers.length > 0 ? wagers : undefined, // New wagers array (use undefined instead of null for JSON field)
       RoundPlayer: {
         create: playersData,
       },
