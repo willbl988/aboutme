@@ -13,6 +13,7 @@ interface Player {
   id: string
   name: string
   mulligansAllowed?: number
+  mulligansEnabled?: boolean
 }
 
 function NewRoundContent() {
@@ -22,7 +23,7 @@ function NewRoundContent() {
 
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
-  const [players, setPlayers] = useState<Player[]>([{ id: '1', name: '' }])
+  const [players, setPlayers] = useState<Player[]>([{ id: '1', name: '', mulligansEnabled: false }])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -71,7 +72,7 @@ function NewRoundContent() {
   }
 
   const addPlayer = () => {
-    setPlayers([...players, { id: String(Date.now()), name: '' }])
+    setPlayers([...players, { id: String(Date.now()), name: '', mulligansEnabled: false }])
   }
 
   const removePlayer = (id: string) => {
@@ -88,11 +89,24 @@ function NewRoundContent() {
     setPlayers(players.map(p => (p.id === id ? { ...p, mulligansAllowed: mulligans } : p)))
   }
 
+  const toggleMulligans = (id: string) => {
+    setPlayers(players.map(p => {
+      if (p.id === id) {
+        const enabled = !p.mulligansEnabled
+        return { ...p, mulligansEnabled: enabled, mulligansAllowed: enabled ? (p.mulligansAllowed || 0) : 0 }
+      }
+      return p
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedCourse) return
 
-    const validPlayers = players.filter(p => p.name.trim())
+    const validPlayers = players.filter(p => p.name.trim()).map(p => ({
+      name: p.name,
+      mulligansAllowed: p.mulligansEnabled ? (p.mulligansAllowed || 0) : 0
+    }))
     if (validPlayers.length === 0) {
       alert('Please add at least one player')
       return
@@ -215,17 +229,34 @@ function NewRoundContent() {
                     className="flex-1 w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                   <div className="flex items-center gap-2 sm:gap-2">
-                    <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                      Mulligans:
+                    <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap flex items-center gap-2">
+                      <span>Mulligans:</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleMulligans(player.id)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                          player.mulligansEnabled
+                            ? 'bg-green-600'
+                            : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            player.mulligansEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
                     </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="18"
-                      value={player.mulligansAllowed || 0}
-                      onChange={(e) => updatePlayerMulligans(player.id, parseInt(e.target.value) || 0)}
-                      className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    />
+                    {player.mulligansEnabled && (
+                      <input
+                        type="number"
+                        min="0"
+                        max="18"
+                        value={player.mulligansAllowed || 0}
+                        onChange={(e) => updatePlayerMulligans(player.id, parseInt(e.target.value) || 0)}
+                        className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                    )}
                   </div>
                   {players.length > 1 && (
                     <button
