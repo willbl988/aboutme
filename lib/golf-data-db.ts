@@ -147,16 +147,27 @@ export async function createRound(
     throw new Error('Course not found')
   }
 
+  // Ensure mulligansAllowed is a valid integer
+  const playersData = players.map((player) => {
+    let mulligans = 0
+    if (player.mulligansAllowed !== undefined && player.mulligansAllowed !== null) {
+      mulligans = typeof player.mulligansAllowed === 'number' 
+        ? Math.max(0, Math.floor(player.mulligansAllowed))
+        : parseInt(String(player.mulligansAllowed), 10) || 0
+    }
+    return {
+      name: player.name,
+      mulligansAllowed: mulligans,
+    }
+  })
+
   const round = await prisma.round.create({
     data: {
       courseId,
       createdById,
       status: 'active',
       players: {
-        create: players.map((player) => ({
-          name: player.name,
-          mulligansAllowed: player.mulligansAllowed || 0,
-        })),
+        create: playersData,
       },
     },
     include: {

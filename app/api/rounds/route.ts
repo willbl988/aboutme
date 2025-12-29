@@ -47,10 +47,15 @@ export async function POST(request: NextRequest) {
 
     const round = await createRound(courseId, user.id, players)
     return NextResponse.json({ round })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create round:', error)
+    // Return more detailed error message for debugging
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error?.message || 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      },
       { status: 500 }
     )
   }

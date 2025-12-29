@@ -112,13 +112,21 @@ function NewRoundContent() {
 
       if (response.ok) {
         const data = await response.json()
-        router.push(`/rounds/${data.round.id}`)
+        if (data.round && data.round.id) {
+          router.push(`/rounds/${data.round.id}`)
+        } else {
+          console.error('Round created but no ID in response:', data)
+          alert('Round created but failed to redirect. Please check your rounds list.')
+          router.push('/rounds')
+        }
       } else {
-        alert('Failed to create round')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Failed to create round:', errorData)
+        alert(`Failed to create round: ${errorData.details || errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to create round:', error)
-      alert('An error occurred')
+      alert('An error occurred while creating the round')
     } finally {
       setSubmitting(false)
     }

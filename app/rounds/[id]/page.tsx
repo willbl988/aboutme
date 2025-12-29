@@ -64,10 +64,27 @@ export default function RoundDetailPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        setRound(data.round)
+        if (data.round) {
+          setRound(data.round)
+        } else {
+          console.error('Round not found in response')
+          router.push('/rounds')
+        }
+      } else {
+        if (response.status === 404) {
+          console.error('Round not found')
+          router.push('/rounds')
+        } else {
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Failed to load round:', errorData)
+          alert(`Failed to load round: ${errorData.error || 'Unknown error'}`)
+          router.push('/rounds')
+        }
       }
     } catch (error) {
       console.error('Failed to load round:', error)
+      alert('An error occurred while loading the round')
+      router.push('/rounds')
     } finally {
       setLoading(false)
     }
