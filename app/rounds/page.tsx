@@ -127,7 +127,7 @@ export default function RoundsPage() {
               className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base transition-all ${
                 showActiveOnly
                   ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                  : 'bg-white/80 dark:bg-green-900/30 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-green-800/30'
+                  : 'bg-white/80 dark:bg-green-900/30 text-gray-700 dark:text-gray-300 border-2 border-green-200/50 dark:border-green-800/30'
               }`}
             >
               {showActiveOnly ? 'Show All Rounds' : 'Show Active Only'}
@@ -202,7 +202,7 @@ export default function RoundsPage() {
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         round.status === 'active'
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                          : 'bg-gray-100 dark:bg-green-800/30 text-gray-800 dark:text-gray-300'
+                          : 'bg-white/50 dark:bg-green-800/30 text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       {round.status}

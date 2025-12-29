@@ -292,7 +292,7 @@ function NewRoundContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-8">
           New Round
@@ -310,7 +310,7 @@ function NewRoundContent() {
                 setSelectedCourse(course || null)
               }}
               required
-              className="w-full px-4 py-3 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
+              className="w-full px-4 py-3 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white"
             >
               <option value="">Choose a course...</option>
               {courses.map((course) => (
@@ -328,7 +328,7 @@ function NewRoundContent() {
             <select
               value={gameMode}
               onChange={(e) => setGameMode(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
+              className="w-full px-4 py-3 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white"
             >
               <option value="stroke">Stroke Play (Standard)</option>
               <option value="scramble">Scramble</option>
@@ -336,7 +336,7 @@ function NewRoundContent() {
               <option value="alternate">Alternate Shot</option>
               <option value="match">Match Play</option>
             </select>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
               {gameMode === 'stroke' && 'Each player plays their own ball, total score counts'}
               {gameMode === 'scramble' && 'All players hit, choose best shot, all play from there'}
               {gameMode === 'bestball' && 'Each player plays their own ball, best score per hole counts'}
@@ -386,7 +386,7 @@ function NewRoundContent() {
                           setTimeout(() => setActiveSearchPlayerId(null), 200)
                         }}
                         placeholder={`Player ${index + 1} name`}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
+                        className="w-full px-4 py-2 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white"
                       />
                       {player.userId && (
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
@@ -394,7 +394,7 @@ function NewRoundContent() {
                         </span>
                       )}
                       {showResults && (
-                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-green-900/30 border border-gray-300 dark:border-green-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-green-900/30 border-2 border-green-200 dark:border-green-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {searchResults.map((user) => (
                             <button
                               key={user.id}
@@ -403,14 +403,14 @@ function NewRoundContent() {
                               className="w-full text-left px-4 py-2 hover:bg-green-50 dark:hover:bg-green-900/20 transition text-sm"
                             >
                               <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">{user.email}</div>
                             </button>
                           ))}
                         </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 sm:gap-2">
-                    <label className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap flex items-center gap-2">
+                    <label className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap flex items-center gap-2">
                       <span>Mulligans:</span>
                       <button
                         type="button"
@@ -418,7 +418,7 @@ function NewRoundContent() {
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                           player.mulligansEnabled
                             ? 'bg-green-600'
-                            : 'bg-gray-300 dark:bg-green-800/50'
+                            : 'bg-gray-200 dark:bg-green-800/50'
                         }`}
                       >
                         <span
@@ -439,7 +439,7 @@ function NewRoundContent() {
                           // Select all text when focused to make it easier to replace
                           e.target.select()
                         }}
-                        className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
+                        className="w-20 sm:w-20 px-3 py-2 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white"
                       />
                     )}
                   </div>
@@ -463,7 +463,7 @@ function NewRoundContent() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-green-800/50 transition-all"
+              className="flex-1 px-6 py-3 bg-white/80 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-white dark:hover:bg-green-800/50 border-2 border-green-200 dark:border-green-700 transition-all"
             >
               Cancel
             </button>
