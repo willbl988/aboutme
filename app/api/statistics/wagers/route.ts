@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         createdById: user.id,
         status: 'completed',
         wagers: {
-          not: null,
+          not: null as any,
         },
       },
       include: {
