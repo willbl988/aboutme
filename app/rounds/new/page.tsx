@@ -93,8 +93,15 @@ function NewRoundContent() {
     setPlayers(players.map(p => (p.id === id ? { ...p, name } : p)))
   }
 
-  const updatePlayerMulligans = (id: string, mulligans: number) => {
-    setPlayers(players.map(p => (p.id === id ? { ...p, mulligansAllowed: mulligans } : p)))
+  const updatePlayerMulligans = (id: string, value: string) => {
+    // Allow empty string while typing, parse to number when valid
+    const numValue = value === '' ? 0 : parseInt(value, 10)
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 18) {
+      setPlayers(players.map(p => (p.id === id ? { ...p, mulligansAllowed: numValue } : p)))
+    } else if (value === '') {
+      // Allow empty string temporarily while typing
+      setPlayers(players.map(p => (p.id === id ? { ...p, mulligansAllowed: 0 } : p)))
+    }
   }
 
   const toggleMulligans = (id: string) => {
@@ -310,8 +317,12 @@ function NewRoundContent() {
                         type="number"
                         min="0"
                         max="18"
-                        value={player.mulligansAllowed || 0}
-                        onChange={(e) => updatePlayerMulligans(player.id, parseInt(e.target.value) || 0)}
+                        value={player.mulligansAllowed ?? ''}
+                        onChange={(e) => updatePlayerMulligans(player.id, e.target.value)}
+                        onFocus={(e) => {
+                          // Select all text when focused to make it easier to replace
+                          e.target.select()
+                        }}
                         className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                       />
                     )}
