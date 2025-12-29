@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -38,6 +38,10 @@ export default function CoursesPage() {
   const [apiSearchQuery, setApiSearchQuery] = useState('')
   const [apiSearchResults, setApiSearchResults] = useState<ApiCourse[]>([])
   const [apiSearchLoading, setApiSearchLoading] = useState(false)
+  const [apiSearchPage, setApiSearchPage] = useState(1)
+  const [apiSearchTotal, setApiSearchTotal] = useState(0)
+  const [apiSearchHasMore, setApiSearchHasMore] = useState(false)
+  const [apiSearchLoadingMore, setApiSearchLoadingMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [numberOfHoles, setNumberOfHoles] = useState<9 | 18>(18)
   const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null)
@@ -49,17 +53,55 @@ export default function CoursesPage() {
       yardage: 0,
     })),
   })
+  
+  // Use refs to track and cancel in-flight requests
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const currentSearchQueryRef = useRef<string>('')
+  const apiSearchAbortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     checkAuth()
   }, [])
 
+  // Auto-search when API search query changes (debounced)
+  useEffect(() => {
+    if (showApiSearch && apiSearchQuery.trim().length >= 2) {
+      const timeoutId = setTimeout(() => {
+        searchApiCourses(1, false)
+      }, 500) // Debounce search
+      
+      return () => clearTimeout(timeoutId)
+    } else if (showApiSearch && apiSearchQuery.trim().length === 0) {
+      // Clear results when query is empty
+      setApiSearchResults([])
+      setApiSearchPage(1)
+      setApiSearchTotal(0)
+      setApiSearchHasMore(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiSearchQuery, showApiSearch])
+
   useEffect(() => {
     if (!loading) {
-      const timeoutId = setTimeout(() => {
+      // Cancel any pending timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+      
+      // Store the current search query to check against when response arrives
+      currentSearchQueryRef.current = searchQuery
+      
+      // Debounce search
+      searchTimeoutRef.current = setTimeout(() => {
         loadCourses()
-      }, 300) // Debounce search
-      return () => clearTimeout(timeoutId)
+      }, 300)
+      
+      return () => {
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current)
+        }
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
@@ -96,16 +138,32 @@ export default function CoursesPage() {
   }
 
   const loadCourses = async () => {
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    
+    // Create new abort controller for this request
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    
+    // Store the search query at the start of the request
+    const queryAtStart = currentSearchQueryRef.current
+    
     try {
-      setLoading(true) // Ensure loading is set when starting
-      const url = searchQuery && searchQuery.trim()
-        ? `/api/courses?q=${encodeURIComponent(searchQuery.trim())}`
+      setLoading(true)
+      const url = queryAtStart && queryAtStart.trim()
+        ? `/api/courses?q=${encodeURIComponent(queryAtStart.trim())}`
         : '/api/courses'
-      console.log(`[loadCourses] Fetching from: ${url}, searchQuery: "${searchQuery}"`)
+      console.log(`[loadCourses] Fetching from: ${url}, searchQuery: "${queryAtStart}"`)
       
       // Add timeout to prevent hanging
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      const timeoutId = setTimeout(() => {
+        if (!controller.signal.aborted) {
+          controller.abort()
+          console.error('[loadCourses] Request timed out after 10 seconds')
+        }
+      }, 10000) // 10 second timeout
       
       const response = await fetch(url, {
         credentials: 'include',
@@ -114,6 +172,18 @@ export default function CoursesPage() {
       })
       
       clearTimeout(timeoutId)
+      
+      // Check if this request was cancelled (user typed something new)
+      if (controller.signal.aborted) {
+        console.log('[loadCourses] Request was cancelled (new search started)')
+        return
+      }
+      
+      // Check if the search query has changed since we started
+      if (currentSearchQueryRef.current !== queryAtStart) {
+        console.log('[loadCourses] Search query changed, ignoring stale response')
+        return
+      }
       
       if (!response.ok) {
         console.error(`[loadCourses] Failed with status: ${response.status}`)
@@ -124,15 +194,31 @@ export default function CoursesPage() {
       
       const data = await response.json()
       console.log(`[loadCourses] Received ${data.courses?.length || 0} courses`)
-      setCourses(data.courses || [])
-    } catch (error: any) {
-      console.error('[loadCourses] Failed to load courses:', error)
-      if (error.name === 'AbortError') {
-        console.error('[loadCourses] Request timed out after 10 seconds')
+      
+      // Double-check the query hasn't changed before setting state
+      if (currentSearchQueryRef.current === queryAtStart) {
+        setCourses(data.courses || [])
+      } else {
+        console.log('[loadCourses] Search query changed before state update, ignoring results')
       }
-      setCourses([])
+    } catch (error: any) {
+      // Ignore abort errors (they're expected when cancelling)
+      if (error.name === 'AbortError') {
+        console.log('[loadCourses] Request was aborted')
+        return
+      }
+      
+      console.error('[loadCourses] Failed to load courses:', error)
+      
+      // Only update state if this is still the current search
+      if (currentSearchQueryRef.current === queryAtStart) {
+        setCourses([])
+      }
     } finally {
-      setLoading(false)
+      // Only clear loading if this is still the current search
+      if (currentSearchQueryRef.current === queryAtStart && !controller.signal.aborted) {
+        setLoading(false)
+      }
     }
   }
 
@@ -166,17 +252,58 @@ export default function CoursesPage() {
     }
   }
 
-  const searchApiCourses = async () => {
-    if (!apiSearchQuery.trim()) return
+  const searchApiCourses = async (page: number = 1, append: boolean = false) => {
+    if (!apiSearchQuery.trim()) {
+      setApiSearchResults([])
+      setApiSearchPage(1)
+      setApiSearchTotal(0)
+      setApiSearchHasMore(false)
+      return
+    }
 
-    setApiSearchLoading(true)
+    // If this is a new search (not loading more), cancel previous and reset
+    if (!append) {
+      if (apiSearchAbortControllerRef.current) {
+        apiSearchAbortControllerRef.current.abort()
+      }
+      setApiSearchPage(1)
+      setApiSearchResults([])
+    }
+
+    // Create new abort controller for this request
+    const controller = new AbortController()
+    apiSearchAbortControllerRef.current = controller
+    
+    // Store the query at the start of the request
+    const queryAtStart = apiSearchQuery.trim()
+
+    if (append) {
+      setApiSearchLoadingMore(true)
+    } else {
+      setApiSearchLoading(true)
+    }
+    
     try {
-      const url = `/api/courses/search?q=${encodeURIComponent(apiSearchQuery)}`
-      console.log('[searchApiCourses] Fetching from:', url)
+      const url = `/api/courses/search?q=${encodeURIComponent(queryAtStart)}&limit=20&page=${page}`
+      console.log('[searchApiCourses] Fetching from:', url, append ? '(loading more)' : '(new search)')
       
       const response = await fetch(url, {
         credentials: 'include',
+        cache: 'no-store',
+        signal: controller.signal,
       })
+
+      // Check if this request was cancelled
+      if (controller.signal.aborted) {
+        console.log('[searchApiCourses] Request was cancelled (new search started)')
+        return
+      }
+
+      // Check if the search query has changed
+      if (apiSearchQuery.trim() !== queryAtStart) {
+        console.log('[searchApiCourses] Search query changed, ignoring stale response')
+        return
+      }
       
       console.log('[searchApiCourses] Response status:', response.status, response.statusText)
       
@@ -188,23 +315,69 @@ export default function CoursesPage() {
           console.error('[searchApiCourses] 401 - Unauthorized')
           alert('Please log in to search courses.')
         } else {
-          const errorText = await response.text()
+          const errorText = await response.text().catch(() => 'Unable to read error')
           console.error('[searchApiCourses] Error response:', errorText)
           alert(`Search failed: ${response.status} ${response.statusText}`)
         }
-        setApiSearchResults([])
+        
+        // Only update state if this is still the current search
+        if (apiSearchQuery.trim() === queryAtStart && !append) {
+          setApiSearchResults([])
+          setApiSearchTotal(0)
+          setApiSearchHasMore(false)
+        }
         return
       }
       
       const data = await response.json()
       console.log('[searchApiCourses] Received data:', data)
-      setApiSearchResults(data.courses || [])
-    } catch (error) {
+      
+      // Double-check the query hasn't changed before setting state
+      if (apiSearchQuery.trim() === queryAtStart) {
+        if (append) {
+          // Append new results to existing ones
+          setApiSearchResults(prev => [...prev, ...(data.courses || [])])
+        } else {
+          // Replace results with new ones
+          setApiSearchResults(data.courses || [])
+        }
+        setApiSearchPage(data.page || page)
+        setApiSearchTotal(data.total || 0)
+        setApiSearchHasMore(data.hasMore || false)
+      } else {
+        console.log('[searchApiCourses] Search query changed before state update, ignoring results')
+      }
+    } catch (error: any) {
+      // Ignore abort errors
+      if (error.name === 'AbortError') {
+        console.log('[searchApiCourses] Request was aborted')
+        return
+      }
+      
       console.error('[searchApiCourses] Failed to search courses:', error)
-      alert(`Search error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setApiSearchResults([])
+      
+      // Only show error and update state if this is still the current search
+      if (apiSearchQuery.trim() === queryAtStart && !append) {
+        alert(`Search error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        setApiSearchResults([])
+        setApiSearchTotal(0)
+        setApiSearchHasMore(false)
+      }
     } finally {
-      setApiSearchLoading(false)
+      // Only clear loading if this is still the current search
+      if (apiSearchQuery.trim() === queryAtStart && !controller.signal.aborted) {
+        if (append) {
+          setApiSearchLoadingMore(false)
+        } else {
+          setApiSearchLoading(false)
+        }
+      }
+    }
+  }
+
+  const loadMoreApiCourses = () => {
+    if (apiSearchHasMore && !apiSearchLoadingMore) {
+      searchApiCourses(apiSearchPage + 1, true)
     }
   }
 
@@ -232,6 +405,9 @@ export default function CoursesPage() {
         setShowApiSearch(false)
         setApiSearchQuery('')
         setApiSearchResults([])
+        setApiSearchPage(1)
+        setApiSearchTotal(0)
+        setApiSearchHasMore(false)
         loadCourses()
       }
     } catch (error) {
@@ -316,13 +492,20 @@ export default function CoursesPage() {
                 <input
                   type="text"
                   value={apiSearchQuery}
-                  onChange={(e) => setApiSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchApiCourses()}
+                  onChange={(e) => {
+                    setApiSearchQuery(e.target.value)
+                    // Reset pagination when query changes
+                    setApiSearchPage(1)
+                    setApiSearchResults([])
+                    setApiSearchTotal(0)
+                    setApiSearchHasMore(false)
+                  }}
+                  onKeyPress={(e) => e.key === 'Enter' && searchApiCourses(1, false)}
                   placeholder="Search by course name, city, or location..."
                   className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
                 <button
-                  onClick={searchApiCourses}
+                  onClick={() => searchApiCourses(1, false)}
                   disabled={apiSearchLoading || !apiSearchQuery.trim()}
                   className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -332,9 +515,20 @@ export default function CoursesPage() {
 
               {apiSearchResults.length > 0 && (
                 <div className="space-y-4 mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Found {apiSearchResults.length} course(s)
-                  </h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Showing {apiSearchResults.length} of {apiSearchTotal} course(s)
+                    </h3>
+                    {apiSearchHasMore && (
+                      <button
+                        onClick={loadMoreApiCourses}
+                        disabled={apiSearchLoadingMore}
+                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        {apiSearchLoadingMore ? 'Loading...' : 'Load More'}
+                      </button>
+                    )}
+                  </div>
                   {apiSearchResults.map((course) => (
                     <div
                       key={course.id}
@@ -403,6 +597,23 @@ export default function CoursesPage() {
                       )}
                     </div>
                   ))}
+                  
+                  {apiSearchLoadingMore && (
+                    <div className="flex justify-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                    </div>
+                  )}
+                  
+                  {apiSearchHasMore && !apiSearchLoadingMore && (
+                    <div className="flex justify-center pt-4">
+                      <button
+                        onClick={loadMoreApiCourses}
+                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all"
+                      >
+                        Load More ({apiSearchTotal - apiSearchResults.length} remaining)
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

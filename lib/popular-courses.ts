@@ -4,6 +4,86 @@
 
 import { CourseApiResult } from './course-api'
 
+// State name to abbreviation mapping for better search
+const STATE_MAPPINGS: Record<string, string[]> = {
+  'alabama': ['al'],
+  'alaska': ['ak'],
+  'arizona': ['az'],
+  'arkansas': ['ar'],
+  'california': ['ca'],
+  'colorado': ['co'],
+  'connecticut': ['ct'],
+  'delaware': ['de'],
+  'florida': ['fl'],
+  'georgia': ['ga'],
+  'hawaii': ['hi'],
+  'idaho': ['id'],
+  'illinois': ['il'],
+  'indiana': ['in'],
+  'iowa': ['ia'],
+  'kansas': ['ks'],
+  'kentucky': ['ky'],
+  'louisiana': ['la'],
+  'maine': ['me'],
+  'maryland': ['md'],
+  'massachusetts': ['ma'],
+  'michigan': ['mi'],
+  'minnesota': ['mn'],
+  'mississippi': ['ms'],
+  'missouri': ['mo'],
+  'montana': ['mt'],
+  'nebraska': ['ne'],
+  'nevada': ['nv'],
+  'new hampshire': ['nh'],
+  'new jersey': ['nj'],
+  'new mexico': ['nm'],
+  'new york': ['ny'],
+  'north carolina': ['nc'],
+  'north dakota': ['nd'],
+  'ohio': ['oh'],
+  'oklahoma': ['ok'],
+  'oregon': ['or'],
+  'pennsylvania': ['pa'],
+  'rhode island': ['ri'],
+  'south carolina': ['sc'],
+  'south dakota': ['sd'],
+  'tennessee': ['tn'],
+  'texas': ['tx'],
+  'utah': ['ut'],
+  'vermont': ['vt'],
+  'virginia': ['va'],
+  'washington': ['wa'],
+  'west virginia': ['wv'],
+  'wisconsin': ['wi'],
+  'wyoming': ['wy'],
+  'district of columbia': ['dc'],
+}
+
+// Helper function to expand search terms with state name/abbreviation mappings
+function expandSearchTerms(terms: string[]): string[] {
+  const expanded = new Set<string>(terms)
+  
+  for (const term of terms) {
+    const termLower = term.toLowerCase()
+    
+    // Check if term is a state name - add abbreviation
+    if (STATE_MAPPINGS[termLower]) {
+      STATE_MAPPINGS[termLower].forEach(abbr => expanded.add(abbr))
+    }
+    
+    // Check if term is a state abbreviation - add full name
+    for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+      if (abbreviations.includes(termLower)) {
+        expanded.add(stateName)
+        // Also add individual words for multi-word states
+        stateName.split(' ').forEach(word => expanded.add(word))
+      }
+    }
+  }
+  
+  return Array.from(expanded)
+}
+
 export const POPULAR_COURSES: CourseApiResult[] = [
   // Atlanta Area Courses
   {
@@ -280,6 +360,97 @@ export const POPULAR_COURSES: CourseApiResult[] = [
     totalYardage: 7200,
     totalPar: 72,
   },
+  // Mobile, Alabama Area Courses
+  {
+    id: 'popular-magnolia-grove',
+    name: 'Magnolia Grove Golf Course',
+    city: 'Mobile',
+    state: 'AL',
+    country: 'USA',
+    address: '7001 Halls Mill Rd',
+    holes: Array.from({ length: 18 }, (_, i) => ({
+      number: i + 1,
+      par: [4, 5, 4, 3, 4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 4, 3, 5, 4][i] || 4,
+      yardage: [410, 540, 420, 190, 440, 400, 550, 200, 430, 420, 180, 530, 410, 390, 420, 170, 520, 440][i] || 400,
+      handicap: i + 1,
+    })),
+    totalYardage: 7100,
+    totalPar: 72,
+    rating: 73.5,
+    slope: 135,
+  },
+  {
+    id: 'popular-azalea-city',
+    name: 'Azalea City Golf Course',
+    city: 'Mobile',
+    state: 'AL',
+    country: 'USA',
+    address: '1000 Gaillard Dr',
+    holes: Array.from({ length: 18 }, (_, i) => ({
+      number: i + 1,
+      par: [4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 4, 3, 4, 5][i] || 4,
+      yardage: [390, 410, 160, 510, 420, 400, 190, 530, 430, 410, 170, 420, 550, 390, 410, 160, 420, 520][i] || 400,
+      handicap: i + 1,
+    })),
+    totalYardage: 6900,
+    totalPar: 72,
+    rating: 72.0,
+    slope: 128,
+  },
+  {
+    id: 'popular-craft-farms',
+    name: 'Craft Farms Golf Resort',
+    city: 'Gulf Shores',
+    state: 'AL',
+    country: 'USA',
+    address: '3840 Cotton Creek Dr',
+    holes: Array.from({ length: 18 }, (_, i) => ({
+      number: i + 1,
+      par: [4, 5, 4, 3, 4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 4, 3, 5, 4][i] || 4,
+      yardage: [420, 550, 410, 180, 450, 420, 560, 200, 440, 430, 170, 540, 410, 400, 420, 160, 520, 440][i] || 400,
+      handicap: i + 1,
+    })),
+    totalYardage: 7200,
+    totalPar: 72,
+    rating: 74.0,
+    slope: 138,
+  },
+  {
+    id: 'popular-glenlakes',
+    name: 'Glenlakes Golf Club',
+    city: 'Foley',
+    state: 'AL',
+    country: 'USA',
+    address: '255 Clubhouse Dr',
+    holes: Array.from({ length: 18 }, (_, i) => ({
+      number: i + 1,
+      par: [4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4, 4, 3, 4, 5][i] || 4,
+      yardage: [400, 420, 170, 520, 430, 410, 200, 540, 440, 420, 180, 430, 560, 400, 420, 170, 430, 530][i] || 400,
+      handicap: i + 1,
+    })),
+    totalYardage: 7000,
+    totalPar: 72,
+    rating: 73.2,
+    slope: 132,
+  },
+  {
+    id: 'popular-rock-creek',
+    name: 'Rock Creek Golf Club',
+    city: 'Fairhope',
+    state: 'AL',
+    country: 'USA',
+    address: '6100 Rock Creek Dr',
+    holes: Array.from({ length: 18 }, (_, i) => ({
+      number: i + 1,
+      par: [4, 5, 4, 3, 4, 4, 5, 3, 4, 4, 3, 5, 4, 4, 4, 3, 5, 4][i] || 4,
+      yardage: [410, 530, 400, 180, 440, 410, 550, 190, 430, 410, 170, 530, 400, 390, 410, 160, 510, 430][i] || 400,
+      handicap: i + 1,
+    })),
+    totalYardage: 6800,
+    totalPar: 72,
+    rating: 72.5,
+    slope: 130,
+  },
   // Major Championship Courses
   {
     id: 'popular-augusta',
@@ -384,7 +555,55 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
   const queryLower = query.toLowerCase().trim()
   const searchTerms = queryLower.split(/\s+/)
 
+  // Expand search terms to include state name/abbreviation variations
+  const expandedTerms = expandSearchTerms(searchTerms)
+  
+  // Check if this is a state search
+  const isStateSearch = expandedTerms.some(term => {
+    const termLower = term.toLowerCase()
+    // Check if any expanded term is a state name or abbreviation
+    if (STATE_MAPPINGS[termLower]) return true
+    for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+      if (abbreviations.includes(termLower) || stateName === termLower) return true
+    }
+    return false
+  })
+  
   const filtered = POPULAR_COURSES.filter((course) => {
+    // For state searches, ONLY match courses in that state
+    if (isStateSearch) {
+      if (!course.state) {
+        return false
+      }
+      
+      const courseStateLower = course.state.toLowerCase()
+      
+      // Check if course state matches any expanded term
+      return expandedTerms.some(term => {
+        const termLower = term.toLowerCase()
+        
+        // Exact match
+        if (courseStateLower === termLower) {
+          return true
+        }
+        
+        // Check if term is a state name and course state is the abbreviation
+        if (STATE_MAPPINGS[termLower] && STATE_MAPPINGS[termLower].includes(courseStateLower)) {
+          return true
+        }
+        
+        // Check if term is an abbreviation and course state is the full name
+        for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+          if (abbreviations.includes(termLower) && stateName === courseStateLower) {
+            return true
+          }
+        }
+        
+        return false
+      })
+    }
+    
+    // For non-state searches, check searchable text
     const searchableText = [
       course.name,
       course.city,
@@ -396,7 +615,7 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
       .join(' ')
       .toLowerCase()
 
-    return searchTerms.some((term) => searchableText.includes(term))
+    return expandedTerms.some((term) => searchableText.includes(term.toLowerCase()))
   })
 
   // Score and sort by relevance
@@ -406,14 +625,16 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
     const cityLower = course.city?.toLowerCase() || ''
     const stateLower = course.state?.toLowerCase() || ''
 
+    // Check against original query and expanded terms
     if (nameLower === queryLower) score = 1000
     else if (nameLower.startsWith(queryLower)) score = 500
     else if (nameLower.includes(queryLower)) score = 100
     else if (cityLower.includes(queryLower)) score = 200
-    else if (stateLower.includes(queryLower)) score = 150
+    else if (stateLower.includes(queryLower) || expandedTerms.some(term => stateLower === term)) score = 150
     else {
-      const matchingTerms = searchTerms.filter((term) => 
-        nameLower.includes(term) || cityLower.includes(term) || stateLower.includes(term)
+      // Use expanded terms for matching
+      const matchingTerms = expandedTerms.filter((term) => 
+        nameLower.includes(term) || cityLower.includes(term) || stateLower.includes(term) || stateLower === term
       ).length
       score = matchingTerms * 10
     }

@@ -139,13 +139,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const sessionId = request.cookies.get('session')?.value
+    console.log('[POST /api/team] Session ID present:', sessionId ? 'yes' : 'no')
+    
     if (!sessionId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('[POST /api/team] No session cookie found')
+      return NextResponse.json({ error: 'Unauthorized - No session found' }, { status: 401 })
     }
 
     const user = await getUserBySession(sessionId)
+    console.log('[POST /api/team] User from session:', user ? `${user.email} (${user.id})` : 'null')
+    
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('[POST /api/team] Session invalid or expired')
+      return NextResponse.json({ error: 'Unauthorized - Session invalid or expired' }, { status: 401 })
     }
 
     const { userId } = await request.json()

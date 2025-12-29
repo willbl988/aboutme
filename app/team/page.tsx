@@ -262,6 +262,8 @@ export default function TeamPage() {
   const addMember = async (userId: string) => {
     setAdding(true)
     try {
+      console.log('[addMember] Attempting to add user:', userId)
+      
       const response = await fetch('/api/team', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -269,8 +271,11 @@ export default function TeamPage() {
         body: JSON.stringify({ userId }),
       })
 
+      console.log('[addMember] Response status:', response.status, response.statusText)
+
       if (response.ok) {
         const data = await response.json()
+        console.log('[addMember] Successfully added member:', data.member)
         setTeamMembers([...teamMembers, data.member])
         setSearchQuery('')
         setSearchResults([])
@@ -280,12 +285,58 @@ export default function TeamPage() {
         loadLeaderboards()
         loadActivity()
       } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to add member')
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('[addMember] Failed to add member:', response.status, error)
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          // Session expired or invalid - refresh auth and show helpful message
+          console.log('[addMember] Unauthorized - checking auth status')
+          const authResponse = await fetch('/api/auth/me', {
+            credentials: 'include',
+            cache: 'no-store',
+          })
+          const authData = await authResponse.json().catch(() => ({ user: null }))
+          
+          if (!authData.user) {
+            alert('Your session has expired. Please log in again.')
+            router.push('/login')
+            return
+          } else {
+            // Auth is valid, but the team API call failed - retry once
+            console.log('[addMember] Auth is valid, retrying add member request')
+            const retryResponse = await fetch('/api/team', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ userId }),
+            })
+            
+            if (retryResponse.ok) {
+              const retryData = await retryResponse.json()
+              setTeamMembers([...teamMembers, retryData.member])
+              setSearchQuery('')
+              setSearchResults([])
+              setShowSearch(false)
+              loadStatistics()
+              loadLeaderboards()
+              loadActivity()
+              return
+            }
+          }
+        }
+        
+        // Show user-friendly error message
+        const errorMessage = error.error || 
+          (response.status === 401 ? 'Your session has expired. Please log in again.' :
+           response.status === 404 ? 'User not found.' :
+           response.status === 400 ? error.error || 'Invalid request.' :
+           'Failed to add member. Please try again.')
+        alert(errorMessage)
       }
     } catch (error) {
-      console.error('Failed to add member:', error)
-      alert('Failed to add member')
+      console.error('[addMember] Exception while adding member:', error)
+      alert('Network error. Please check your connection and try again.')
     } finally {
       setAdding(false)
     }

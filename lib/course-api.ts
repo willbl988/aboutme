@@ -2,6 +2,86 @@
 // Supports multiple API providers - easily configurable
 // Currently configured for public/accessible APIs
 
+// State name to abbreviation mapping for better search
+const STATE_MAPPINGS: Record<string, string[]> = {
+  'alabama': ['al'],
+  'alaska': ['ak'],
+  'arizona': ['az'],
+  'arkansas': ['ar'],
+  'california': ['ca'],
+  'colorado': ['co'],
+  'connecticut': ['ct'],
+  'delaware': ['de'],
+  'florida': ['fl'],
+  'georgia': ['ga'],
+  'hawaii': ['hi'],
+  'idaho': ['id'],
+  'illinois': ['il'],
+  'indiana': ['in'],
+  'iowa': ['ia'],
+  'kansas': ['ks'],
+  'kentucky': ['ky'],
+  'louisiana': ['la'],
+  'maine': ['me'],
+  'maryland': ['md'],
+  'massachusetts': ['ma'],
+  'michigan': ['mi'],
+  'minnesota': ['mn'],
+  'mississippi': ['ms'],
+  'missouri': ['mo'],
+  'montana': ['mt'],
+  'nebraska': ['ne'],
+  'nevada': ['nv'],
+  'new hampshire': ['nh'],
+  'new jersey': ['nj'],
+  'new mexico': ['nm'],
+  'new york': ['ny'],
+  'north carolina': ['nc'],
+  'north dakota': ['nd'],
+  'ohio': ['oh'],
+  'oklahoma': ['ok'],
+  'oregon': ['or'],
+  'pennsylvania': ['pa'],
+  'rhode island': ['ri'],
+  'south carolina': ['sc'],
+  'south dakota': ['sd'],
+  'tennessee': ['tn'],
+  'texas': ['tx'],
+  'utah': ['ut'],
+  'vermont': ['vt'],
+  'virginia': ['va'],
+  'washington': ['wa'],
+  'west virginia': ['wv'],
+  'wisconsin': ['wi'],
+  'wyoming': ['wy'],
+  'district of columbia': ['dc'],
+}
+
+// Helper function to expand search terms with state name/abbreviation mappings
+function expandSearchTerms(terms: string[]): string[] {
+  const expanded = new Set<string>(terms)
+  
+  for (const term of terms) {
+    const termLower = term.toLowerCase()
+    
+    // Check if term is a state name - add abbreviation
+    if (STATE_MAPPINGS[termLower]) {
+      STATE_MAPPINGS[termLower].forEach(abbr => expanded.add(abbr))
+    }
+    
+    // Check if term is a state abbreviation - add full name
+    for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+      if (abbreviations.includes(termLower)) {
+        expanded.add(stateName)
+        // Also add individual words for multi-word states
+        stateName.split(' ').forEach(word => expanded.add(word))
+      }
+    }
+  }
+  
+  return Array.from(expanded)
+}
+
 export interface CourseApiResult {
   id: string
   name: string
@@ -36,13 +116,23 @@ export interface CourseSearchParams {
   query: string
   location?: string
   limit?: number
+  page?: number
+}
+
+export interface CourseSearchResult {
+  courses: CourseApiResult[]
+  total: number
+  page: number
+  limit: number
+  hasMore: boolean
 }
 
 // API Configuration
 // You can switch between different providers by setting GOLF_API_PROVIDER
-// Options: 'golfcourseapi' | 'golfapiio' | 'custom' | 'mock' | 'multi' (combines multiple sources)
+// Options: 'golfcourseapi' | 'golfapiio' | 'custom' | 'mock' | 'popular' | 'multi' (combines multiple sources)
 // For multiple sources, use comma-separated: 'golfcourseapi,popular' or 'golfcourseapi,golfapiio,popular'
-const API_PROVIDER = (process.env.GOLF_API_PROVIDER || 'golfcourseapi').toLowerCase()
+// Default includes popular courses for better coverage
+const API_PROVIDER = (process.env.GOLF_API_PROVIDER || 'golfcourseapi,popular').toLowerCase()
 const GOLF_API_KEY = process.env.GOLF_API_KEY || null
 
 // GolfCourseAPI.com - API with authentication
@@ -72,6 +162,9 @@ let courseCache: {
   fetchedAt: number
   pagesFetched: number
 } | null = null
+
+// Lock to prevent multiple simultaneous cache fetches
+let cacheFetchPromise: Promise<CourseApiResult[]> | null = null
 
 const CACHE_DURATION = 1000 * 60 * 60 // 1 hour cache
 const TARGET_CACHE_SIZE = 5000 // Target: cache 5000 courses (250 pages) for better coverage - includes more cities
@@ -177,10 +270,10 @@ function convertCustomAPICourse(apiCourse: any): CourseApiResult | null {
   }
 }
 
-export async function searchCourses(params: CourseSearchParams): Promise<CourseApiResult[]> {
-  const { query, limit = 10 } = params
+export async function searchCourses(params: CourseSearchParams): Promise<CourseSearchResult> {
+  const { query, limit = 20, page = 1 } = params
 
-  console.log(`[searchCourses] Provider: ${API_PROVIDER}, Query: "${query}", Limit: ${limit}`)
+  console.log(`[searchCourses] Provider: ${API_PROVIDER}, Query: "${query}", Limit: ${limit}, Page: ${page}`)
   console.log(`[searchCourses] API Key: ${GOLF_API_KEY ? 'Set ✓' : 'Not set ✗'}`)
 
   try {
@@ -193,6 +286,7 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
     const seenIds = new Set<string>()
 
     // Search each provider and combine results
+    // For pagination, we need to get ALL results first, then paginate
     for (const provider of providers) {
       try {
         let providerResults: CourseApiResult[] = []
@@ -202,23 +296,24 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
             if (!GOLF_API_KEY) {
               console.warn('[searchCourses] ⚠️  GOLF_API_KEY not set - skipping GolfCourseAPI')
             } else {
-              providerResults = await searchGolfCourseAPI(query, limit * 2) // Get more to allow for deduplication
+              // Get a large number of results to allow for pagination
+              providerResults = await searchGolfCourseAPI(query, 1000) // Get up to 1000 for pagination
             }
             break
           case 'popular':
             const { searchPopularCourses } = await import('./popular-courses')
-            providerResults = searchPopularCourses(query, limit * 2)
+            providerResults = searchPopularCourses(query, 1000) // Get all matching popular courses
             console.log(`[searchCourses] Popular courses DB: Found ${providerResults.length} matches`)
             break
           case 'custom':
             if (CUSTOM_API_BASE) {
-              providerResults = await searchCustomAPI(query, limit * 2)
+              providerResults = await searchCustomAPI(query, 1000)
             } else {
               console.warn('CUSTOM_GOLF_API_URL not set, skipping custom API')
             }
             break
           case 'mock':
-            providerResults = getMockCourses(query, limit * 2)
+            providerResults = getMockCourses(query, 1000)
             break
           default:
             console.warn(`[searchCourses] Unknown provider: ${provider}, skipping`)
@@ -242,8 +337,8 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
     if (allResults.length === 0) {
       console.log('[searchCourses] No results from providers, using popular courses + mock data')
       const { searchPopularCourses } = await import('./popular-courses')
-      const popularResults = searchPopularCourses(query, limit)
-      const mockResults = getMockCourses(query, limit)
+      const popularResults = searchPopularCourses(query, 1000)
+      const mockResults = getMockCourses(query, 1000)
       allResults = [...popularResults, ...mockResults]
       // Deduplicate
       const deduped: CourseApiResult[] = []
@@ -281,16 +376,41 @@ export async function searchCourses(params: CourseSearchParams): Promise<CourseA
       return 0
     })
 
-    const finalResults = sorted.slice(0, limit)
-    console.log(`[searchCourses] Returning ${finalResults.length} results (from ${providers.length} provider(s))`)
-    return finalResults
+    // Apply pagination
+    const total = sorted.length
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    const paginatedResults = sorted.slice(startIndex, endIndex)
+    const hasMore = endIndex < total
+
+    console.log(`[searchCourses] Returning ${paginatedResults.length} results (page ${page} of ${Math.ceil(total / limit)}, total: ${total})`)
+    
+    return {
+      courses: paginatedResults,
+      total,
+      page,
+      limit,
+      hasMore,
+    }
   } catch (error) {
     console.error('Error searching courses:', error)
     console.warn('[searchCourses] Error occurred, falling back to popular courses + mock data')
     const { searchPopularCourses } = await import('./popular-courses')
-    const popularResults = searchPopularCourses(query, limit)
-    const mockResults = getMockCourses(query, limit)
-    return [...popularResults, ...mockResults].slice(0, limit)
+    const popularResults = searchPopularCourses(query, 1000)
+    const mockResults = getMockCourses(query, 1000)
+    const allResults = [...popularResults, ...mockResults].slice(0, 1000)
+    const total = allResults.length
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    const paginatedResults = allResults.slice(startIndex, endIndex)
+    
+    return {
+      courses: paginatedResults,
+      total,
+      page,
+      limit,
+      hasMore: endIndex < total,
+    }
   }
 }
 
@@ -302,95 +422,112 @@ async function fetchAndCacheCourses(): Promise<CourseApiResult[]> {
     return courseCache.courses
   }
 
+  // If a fetch is already in progress, wait for it instead of starting a new one
+  if (cacheFetchPromise) {
+    console.log('[fetchAndCacheCourses] Cache fetch already in progress, waiting...')
+    return cacheFetchPromise
+  }
+
   if (!GOLF_API_KEY) {
     console.warn('GOLF_API_KEY not set for GolfCourseAPI')
     return []
   }
 
-  console.log('Fetching courses from API (this may take a moment)...')
-  const perPage = 20
-  const pagesToFetch = Math.ceil(TARGET_CACHE_SIZE / perPage) // 100 pages = 2000 courses
-  let allCourses: CourseApiResult[] = []
-  let totalPages: number | null = null
+  // Create the fetch promise and store it so other calls can wait for it
+  cacheFetchPromise = (async () => {
+    console.log('Fetching courses from API (this may take a moment)...')
+    const perPage = 20
+    const pagesToFetch = Math.ceil(TARGET_CACHE_SIZE / perPage) // 100 pages = 2000 courses
+    let allCourses: CourseApiResult[] = []
+    let totalPages: number | null = null
 
-  console.log(`Starting to fetch ${pagesToFetch} pages (target: ${TARGET_CACHE_SIZE} courses)...`)
+    console.log(`Starting to fetch ${pagesToFetch} pages (target: ${TARGET_CACHE_SIZE} courses)...`)
 
-  for (let page = 1; page <= pagesToFetch; page++) {
-    try {
-      const searchUrl = `${GOLFCOURSEAPI_BASE}/courses?page=${page}&per_page=${perPage}`
-      
-      const response = await fetch(searchUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Key ${GOLF_API_KEY}`,
-        },
-      })
+    for (let page = 1; page <= pagesToFetch; page++) {
+      try {
+        const searchUrl = `${GOLFCOURSEAPI_BASE}/courses?page=${page}&per_page=${perPage}`
+        
+        const response = await fetch(searchUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Key ${GOLF_API_KEY}`,
+          },
+        })
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unable to read error')
-        console.error(`[fetchAndCacheCourses] API error on page ${page}: ${response.status} ${response.statusText}`)
-        console.error(`[fetchAndCacheCourses] Error details:`, errorText.substring(0, 500))
-        if (response.status === 401) {
-          console.error('[fetchAndCacheCourses] ⚠️  Authentication failed - check your API key')
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => 'Unable to read error')
+          console.error(`[fetchAndCacheCourses] API error on page ${page}: ${response.status} ${response.statusText}`)
+          console.error(`[fetchAndCacheCourses] Error details:`, errorText.substring(0, 500))
+          if (response.status === 401) {
+            console.error('[fetchAndCacheCourses] ⚠️  Authentication failed - check your API key')
+          }
+          break
         }
+
+        const data = await response.json()
+        
+        // Get total pages from metadata if available
+        if (data.metadata && !totalPages) {
+          totalPages = data.metadata.last_page
+          console.log(`[fetchAndCacheCourses] API has ${data.metadata.total_records} courses across ${totalPages} pages`)
+        }
+        
+        // Convert API response to our format
+        let pageCourses: CourseApiResult[] = []
+        if (data.courses && Array.isArray(data.courses)) {
+          pageCourses = data.courses.map(convertGolfCourseAPICourse).filter(Boolean) as CourseApiResult[]
+          console.log(`[fetchAndCacheCourses] Page ${page}: Converted ${pageCourses.length} courses from ${data.courses.length} API results`)
+        } else if (Array.isArray(data)) {
+          pageCourses = data.map(convertGolfCourseAPICourse).filter(Boolean) as CourseApiResult[]
+          console.log(`[fetchAndCacheCourses] Page ${page}: Converted ${pageCourses.length} courses from array response`)
+        } else {
+          console.warn(`[fetchAndCacheCourses] Page ${page}: Unexpected response format:`, Object.keys(data))
+        }
+
+        if (pageCourses.length === 0) {
+          console.log(`[fetchAndCacheCourses] Page ${page}: No courses converted, stopping`)
+          break
+        }
+
+        allCourses = allCourses.concat(pageCourses)
+
+        // Progress indicator every 50 pages
+        if (page % 50 === 0) {
+          console.log(`Fetched ${allCourses.length} courses so far...`)
+        }
+
+        // If we got fewer courses than requested, we've reached the end
+        if (pageCourses.length < perPage) {
+          break
+        }
+      } catch (err) {
+        console.warn(`Error fetching page ${page}:`, err)
         break
       }
-
-      const data = await response.json()
-      
-      // Get total pages from metadata if available
-      if (data.metadata && !totalPages) {
-        totalPages = data.metadata.last_page
-        console.log(`[fetchAndCacheCourses] API has ${data.metadata.total_records} courses across ${totalPages} pages`)
-      }
-      
-      // Convert API response to our format
-      let pageCourses: CourseApiResult[] = []
-      if (data.courses && Array.isArray(data.courses)) {
-        pageCourses = data.courses.map(convertGolfCourseAPICourse).filter(Boolean) as CourseApiResult[]
-        console.log(`[fetchAndCacheCourses] Page ${page}: Converted ${pageCourses.length} courses from ${data.courses.length} API results`)
-      } else if (Array.isArray(data)) {
-        pageCourses = data.map(convertGolfCourseAPICourse).filter(Boolean) as CourseApiResult[]
-        console.log(`[fetchAndCacheCourses] Page ${page}: Converted ${pageCourses.length} courses from array response`)
-      } else {
-        console.warn(`[fetchAndCacheCourses] Page ${page}: Unexpected response format:`, Object.keys(data))
-      }
-
-      if (pageCourses.length === 0) {
-        console.log(`[fetchAndCacheCourses] Page ${page}: No courses converted, stopping`)
-        break
-      }
-
-      allCourses = allCourses.concat(pageCourses)
-
-      // Progress indicator every 50 pages
-      if (page % 50 === 0) {
-        console.log(`Fetched ${allCourses.length} courses so far...`)
-      }
-
-      // If we got fewer courses than requested, we've reached the end
-      if (pageCourses.length < perPage) {
-        break
-      }
-    } catch (err) {
-      console.warn(`Error fetching page ${page}:`, err)
-      break
     }
-  }
 
-  // Only cache if we got some courses
-  if (allCourses.length > 0) {
-    courseCache = {
-      courses: allCourses,
-      fetchedAt: Date.now(),
-      pagesFetched: Math.ceil(allCourses.length / perPage),
+    // Only cache if we got some courses
+    if (allCourses.length > 0) {
+      courseCache = {
+        courses: allCourses,
+        fetchedAt: Date.now(),
+        pagesFetched: Math.ceil(allCourses.length / perPage),
+      }
+      console.log(`Cached ${allCourses.length} courses from ${courseCache.pagesFetched} pages`)
+    } else {
+      console.warn('No courses fetched - cache not updated')
     }
-    console.log(`Cached ${allCourses.length} courses from ${courseCache.pagesFetched} pages`)
-  } else {
-    console.warn('No courses fetched - cache not updated')
+    
+    return allCourses
+  })()
+
+  try {
+    const result = await cacheFetchPromise
+    return result
+  } finally {
+    // Clear the promise so future calls can start a new fetch if needed
+    cacheFetchPromise = null
   }
-  
-  return allCourses
 }
 
 // GolfCourseAPI.com implementation
@@ -401,87 +538,352 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
       return getMockCourses(query, limit)
     }
 
-    // Fetch courses (uses cache if available)
-    const allCourses = await fetchAndCacheCourses()
-    
-    // If no courses were fetched, return empty array or mock data
-    if (!allCourses || allCourses.length === 0) {
-      console.warn('[searchGolfCourseAPI] No courses fetched from API, returning empty results')
-      console.warn('[searchGolfCourseAPI] This might mean the API key is invalid or the API is down')
-      return []
+    if (!query || query.trim().length === 0) {
+      // No query, return first N courses from cache
+      const allCourses = await fetchAndCacheCourses()
+      return allCourses.slice(0, limit)
     }
 
-    console.log(`[searchGolfCourseAPI] Searching through ${allCourses.length} cached courses for: "${query}"`)
+    const queryLower = query.toLowerCase().trim()
+    const searchTerms = queryLower.split(/\s+/)
+    console.log(`[searchGolfCourseAPI] Searching for: "${query}" with terms:`, searchTerms)
+
+    // Expand search terms to check if this is a state search
+    const expandedTerms = expandSearchTerms(searchTerms)
     
-    // Log sample of cities in cache for debugging
-    const sampleCities = Array.from(new Set(allCourses.map(c => c.city).filter(Boolean).slice(0, 20)))
-    console.log(`[searchGolfCourseAPI] Sample cities in cache:`, sampleCities.join(', '))
-
-    // Client-side filtering: The API's search parameter doesn't work properly
-    // So we filter and rank the results ourselves based on the query
-    if (query && query.trim().length > 0) {
-      const queryLower = query.toLowerCase().trim()
-      const searchTerms = queryLower.split(/\s+/)
-      
-      console.log(`[searchGolfCourseAPI] Search terms:`, searchTerms)
-      
-      // Score and filter courses based on relevance
-      const scoredCourses = allCourses
-        .map((course) => {
-          const searchableText = [
-            course.name,
-            course.city,
-            course.state,
-            course.country,
-            course.address,
-          ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase()
-
-          // Check if any search term matches (changed from all to any for better results)
-          const anyTermMatches = searchTerms.some((term) => searchableText.includes(term))
-          
-          if (!anyTermMatches) {
-            return null
-          }
-
-          // Calculate relevance score
-          let score = 0
-          const nameLower = course.name.toLowerCase()
-          
-          // Exact name match gets highest score
-          if (nameLower === queryLower) {
-            score = 1000
-          } else if (nameLower.startsWith(queryLower)) {
-            score = 500
-          } else if (nameLower.includes(queryLower)) {
-            score = 100
-          } else {
-            // Partial matches
-            const matchingTerms = searchTerms.filter((term) => nameLower.includes(term)).length
-            score = matchingTerms * 10
-          }
-
-          return { course, score }
-        })
-        .filter((item): item is { course: CourseApiResult; score: number } => item !== null)
-        .sort((a, b) => b.score - a.score) // Sort by relevance (highest first)
-        .map((item) => item.course)
-
-      console.log(`[searchGolfCourseAPI] Found ${scoredCourses.length} matching courses for "${query}"`)
-      if (scoredCourses.length === 0 && allCourses.length > 0) {
-        // Log sample course data for debugging
-        console.log(`[searchGolfCourseAPI] Sample courses in cache (first 3):`, allCourses.slice(0, 3).map(c => ({
-          name: c.name,
-          city: c.city,
-          state: c.state,
-        })))
+    // Check if the query is a state name or abbreviation
+    const isStateSearch = expandedTerms.some(term => {
+      const termLower = term.toLowerCase()
+      // Check if any expanded term is a state name or abbreviation
+      if (STATE_MAPPINGS[termLower]) return true
+      for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+        if (abbreviations.includes(termLower) || stateName === termLower) return true
       }
-      return scoredCourses.slice(0, limit)
+      return false
+    })
+    
+    // Get state abbreviation if this is a state search
+    let stateAbbr: string | null = null
+    if (isStateSearch) {
+      for (const term of expandedTerms) {
+        const termLower = term.toLowerCase()
+        if (STATE_MAPPINGS[termLower]) {
+          stateAbbr = STATE_MAPPINGS[termLower][0].toUpperCase()
+          break
+        }
+        for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+          if (abbreviations.includes(termLower)) {
+            stateAbbr = abbreviations[0].toUpperCase()
+            break
+          }
+        }
+        if (stateAbbr) break
+      }
     }
 
-    return allCourses.slice(0, limit)
+    // Strategy 1: Try API's search endpoint directly (may find courses not in cache)
+    let apiSearchResults: CourseApiResult[] = []
+    try {
+      console.log('[searchGolfCourseAPI] Attempting API search endpoint...')
+      // Request more results from API to get better coverage
+      const apiLimit = Math.max(limit * 5, 50) // Request at least 50, or 5x the limit
+      
+      // For state searches, try both the original query and the state abbreviation
+      const searchQueries = isStateSearch && stateAbbr 
+        ? [query, stateAbbr] 
+        : [query]
+      
+      const allApiCourses: any[] = []
+      
+      for (const searchQuery of searchQueries) {
+        try {
+          const searchUrl = `${GOLFCOURSEAPI_BASE}/courses?search=${encodeURIComponent(searchQuery)}&per_page=${apiLimit}`
+          const response = await fetch(searchUrl, {
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Key ${GOLF_API_KEY}`,
+            },
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            const apiCourses = data.courses || (Array.isArray(data) ? data : [])
+            console.log(`[searchGolfCourseAPI] API search for "${searchQuery}" returned ${apiCourses.length} courses`)
+            allApiCourses.push(...apiCourses)
+          }
+        } catch (error) {
+          console.warn(`[searchGolfCourseAPI] API search for "${searchQuery}" failed:`, error)
+        }
+      }
+      
+      // Deduplicate API courses by ID
+      const uniqueApiCourses = Array.from(
+        new Map(allApiCourses.map(c => [c.id || `${c.course_name}_${c.location?.city}_${c.location?.state}`, c])).values()
+      )
+      
+      console.log(`[searchGolfCourseAPI] Total unique API courses: ${uniqueApiCourses.length}`)
+      
+      // Convert API results with improved filtering
+      console.log(`[searchGolfCourseAPI] Expanded search terms:`, expandedTerms)
+      
+       apiSearchResults = uniqueApiCourses
+         .map(convertGolfCourseAPICourse)
+         .filter((course): course is CourseApiResult => {
+           if (!course) return false
+           
+           // For state searches, ONLY return courses from that state - be strict!
+           if (isStateSearch && stateAbbr) {
+             if (!course.state) {
+               return false // No state info, exclude it
+             }
+             
+             const courseStateUpper = course.state.toUpperCase()
+             const courseStateLower = course.state.toLowerCase()
+             
+             // Check if course state matches the state abbreviation or full name
+             const stateMatches = expandedTerms.some(term => {
+               const termUpper = term.toUpperCase()
+               const termLower = term.toLowerCase()
+               
+               // Exact match (case-insensitive)
+               if (courseStateUpper === termUpper || courseStateLower === termLower) {
+                 return true
+               }
+               
+               // For 2-letter abbreviations, check exact match
+               if (term.length === 2 && courseStateUpper === termUpper) {
+                 return true
+               }
+               
+               // Check if term is a state name and course state is the abbreviation
+               if (STATE_MAPPINGS[termLower] && STATE_MAPPINGS[termLower].includes(courseStateLower)) {
+                 return true
+               }
+               
+               // Check if term is an abbreviation and course state is the full name
+               for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+                 if (abbreviations.includes(termLower) && stateName === courseStateLower) {
+                   return true
+                 }
+               }
+               
+               return false
+             })
+             
+             // For state searches, ONLY return if state matches - don't check other fields
+             return stateMatches
+           }
+           
+           // For non-state searches, check searchable text
+           const searchableText = [
+             course.name,
+             course.city,
+             course.state,
+             course.country,
+             course.address,
+           ]
+             .filter(Boolean)
+             .join(' ')
+             .toLowerCase()
+           
+           // Check if any expanded term matches
+           const hasMatch = expandedTerms.some((term) => {
+             return searchableText.includes(term.toLowerCase())
+           })
+           
+           return hasMatch
+         })
+      
+      console.log(`[searchGolfCourseAPI] After filtering: ${apiSearchResults.length} relevant courses`)
+      if (apiSearchResults.length > 0) {
+        console.log(`[searchGolfCourseAPI] Sample results:`, apiSearchResults.slice(0, 3).map(c => `${c.name} (${c.city}, ${c.state})`))
+      }
+    } catch (error) {
+      console.warn('[searchGolfCourseAPI] API search failed, will use cache search:', error)
+    }
+
+    // Strategy 2: Search through cached courses (faster, but limited to cached data)
+    let cacheSearchResults: CourseApiResult[] = []
+    try {
+      const allCourses = await fetchAndCacheCourses()
+      
+      if (allCourses && allCourses.length > 0) {
+        console.log(`[searchGolfCourseAPI] Searching through ${allCourses.length} cached courses`)
+        
+        // Score and filter courses based on relevance
+        const scoredCourses = allCourses
+          .map((course) => {
+            const searchableText = [
+              course.name,
+              course.city,
+              course.state,
+              course.country,
+              course.address,
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase()
+
+            // Check if any search term matches (including expanded state variations)
+            const anyTermMatches = (() => {
+              // For state searches, ONLY match if the course is in that state
+              if (isStateSearch && stateAbbr) {
+                if (!course.state) {
+                  return false
+                }
+                
+                const courseStateUpper = course.state.toUpperCase()
+                const courseStateLower = course.state.toLowerCase()
+                
+                // Check if course state matches any expanded term
+                return expandedTerms.some(term => {
+                  const termUpper = term.toUpperCase()
+                  const termLower = term.toLowerCase()
+                  
+                  // Exact match (case-insensitive)
+                  if (courseStateUpper === termUpper || courseStateLower === termLower) {
+                    return true
+                  }
+                  
+                  // For 2-letter abbreviations, check exact match
+                  if (term.length === 2 && courseStateUpper === termUpper) {
+                    return true
+                  }
+                  
+                  // Check if term is a state name and course state is the abbreviation
+                  if (STATE_MAPPINGS[termLower] && STATE_MAPPINGS[termLower].includes(courseStateLower)) {
+                    return true
+                  }
+                  
+                  // Check if term is an abbreviation and course state is the full name
+                  for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
+                    if (abbreviations.includes(termLower) && stateName === courseStateLower) {
+                      return true
+                    }
+                  }
+                  
+                  return false
+                })
+              }
+              
+              // For non-state searches, check searchable text
+              return expandedTerms.some(term => {
+                return searchableText.includes(term.toLowerCase())
+              })
+            })()
+            
+            if (!anyTermMatches) {
+              return null
+            }
+
+            // Calculate relevance score - prioritize location matches
+            let score = 0
+            const nameLower = course.name.toLowerCase()
+            const cityLower = course.city?.toLowerCase() || ''
+            const stateLower = course.state?.toLowerCase() || ''
+            
+            // For state searches, prioritize state matches
+            if (isStateSearch && course.state) {
+              const stateMatches = expandedTerms.some(term => {
+                const termLower = term.toLowerCase()
+                return stateLower === termLower || 
+                       stateLower === term ||
+                       (termLower.length === 2 && stateLower === termLower)
+              })
+              if (stateMatches) {
+                score = 500 // High base score for state matches
+              }
+            }
+            
+            // Exact name match gets highest score
+            if (nameLower === queryLower) {
+              score = 1000
+            } else if (nameLower.startsWith(queryLower)) {
+              score = Math.max(score, 500)
+            } else if (nameLower.includes(queryLower)) {
+              score = Math.max(score, 100)
+            }
+            
+            // Boost score for city/state matches (important for location searches)
+            if (cityLower === queryLower || cityLower.includes(queryLower)) {
+              score += 300
+            }
+            // Check state match using expanded terms
+            const stateMatches = expandedTerms.some(term => {
+              const termLower = term.toLowerCase()
+              return stateLower === termLower || 
+                     stateLower.includes(termLower) ||
+                     termLower === stateLower ||
+                     (termLower.length === 2 && stateLower === termLower)
+            })
+            if (stateMatches) {
+              score += 200
+            }
+            
+            // Check if query contains both city and state (e.g., "Mobile Alabama")
+            const hasCityMatch = expandedTerms.some(term => cityLower.includes(term.toLowerCase()))
+            const hasStateMatch = expandedTerms.some(term => {
+              const termLower = term.toLowerCase()
+              return stateLower === termLower ||
+                     stateLower.includes(termLower) ||
+                     (termLower.length === 2 && stateLower === termLower)
+            })
+            if (hasCityMatch && hasStateMatch) {
+              score += 500 // Big boost for city+state matches
+            }
+            
+            // Partial matches - use expanded terms to catch state abbreviations
+            if (score === 0) {
+              const matchingTerms = expandedTerms.filter((term) => {
+                const termLower = term.toLowerCase()
+                return nameLower.includes(termLower) || 
+                       cityLower.includes(termLower) || 
+                       stateLower.includes(termLower) ||
+                       stateLower === termLower ||
+                       (termLower.length === 2 && stateLower === termLower)
+              }).length
+              score = matchingTerms * 10
+            }
+
+            return { course, score }
+          })
+          .filter((item): item is { course: CourseApiResult; score: number } => item !== null)
+          .sort((a, b) => b.score - a.score) // Sort by relevance (highest first)
+          .map((item) => item.course)
+
+        cacheSearchResults = scoredCourses
+        console.log(`[searchGolfCourseAPI] Cache search found ${cacheSearchResults.length} matching courses`)
+      }
+    } catch (error) {
+      console.error('[searchGolfCourseAPI] Cache search error:', error)
+    }
+
+    // Combine results from both strategies and deduplicate
+    const allResults: CourseApiResult[] = []
+    const seenKeys = new Set<string>()
+    
+    // Add API search results first (they may be more up-to-date)
+    for (const course of apiSearchResults) {
+      const key = `${course.name.toLowerCase()}_${course.city?.toLowerCase()}_${course.state?.toLowerCase()}`
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key)
+        allResults.push(course)
+      }
+    }
+    
+    // Add cache search results (may have different courses)
+    for (const course of cacheSearchResults) {
+      const key = `${course.name.toLowerCase()}_${course.city?.toLowerCase()}_${course.state?.toLowerCase()}`
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key)
+        allResults.push(course)
+      }
+    }
+
+    console.log(`[searchGolfCourseAPI] Combined results: ${allResults.length} unique courses`)
+    
+    // Return top results
+    return allResults.slice(0, limit)
   } catch (error) {
     console.error('GolfCourseAPI error:', error)
     // Return mock data as fallback
