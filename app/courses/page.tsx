@@ -7,7 +7,7 @@ import Link from 'next/link'
 interface Course {
   id: string
   name: string
-  holes: { number: number; par: number; yardage?: number }[]
+  Hole: { number: number; par: number; yardage?: number }[]
   createdAt: string
 }
 
@@ -272,7 +272,7 @@ export default function CoursesPage() {
                         <div>
                           <span className="text-gray-600 dark:text-gray-400">Holes:</span>
                           <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                            {course.holes.length}
+                            {course.Hole.length}
                           </span>
                         </div>
                         {course.totalPar && course.totalPar > 0 ? (
@@ -472,18 +472,18 @@ export default function CoursesPage() {
                       </h2>
                       <div className="space-y-2 mb-4">
                         <p className="text-gray-600 dark:text-gray-300">
-                          {course.holes.length} holes
+                          {course.Hole.length} holes
                         </p>
-                        {course.holes.length > 0 && course.holes[0].yardage && (
+                        {course.Hole.length > 0 && course.Hole[0].yardage && (
                           <div className="flex flex-wrap gap-3 text-sm">
                             <span className="text-gray-600 dark:text-gray-400">
                               Par: <span className="font-semibold text-gray-900 dark:text-white">
-                                {course.holes.reduce((sum, hole) => sum + hole.par, 0)}
+                                {course.Hole.reduce((sum, hole) => sum + hole.par, 0)}
                               </span>
                             </span>
                             <span className="text-gray-600 dark:text-gray-400">
                               Total: <span className="font-semibold text-gray-900 dark:text-white">
-                                {course.holes.reduce((sum, hole) => sum + (hole.yardage || 0), 0).toLocaleString()} yds
+                                {course.Hole.reduce((sum, hole) => sum + (hole.yardage || 0), 0).toLocaleString()} yds
                               </span>
                             </span>
                           </div>

@@ -6,20 +6,20 @@ import { useRouter, useParams } from 'next/navigation'
 interface Round {
   id: string
   courseId: string
-  course: {
+  Course: {
     id: string
     name: string
-    holes: { number: number; par: number; yardage?: number }[]
+    Hole: { number: number; par: number; yardage?: number }[]
   }
-  players: {
+  RoundPlayer: {
     id: string
     name: string
     mulligansAllowed: number
-    scores: {
+    Score: {
       holeNumber: number
       score: number
     }[]
-    mulligans: {
+    Mulligan: {
       holeNumber: number
     }[]
   }[]
@@ -137,21 +137,21 @@ export default function RoundDetailPage() {
 
   const hasMulligan = (playerId: string, holeNumber: number): boolean => {
     if (!round) return false
-    const player = round.players.find(p => p.id === playerId)
-    if (!player || !player.mulligans) return false
-    return player.mulligans.some(m => m.holeNumber === holeNumber)
+    const player = round.RoundPlayer.find(p => p.id === playerId)
+    if (!player || !player.Mulligan) return false
+    return player.Mulligan.some(m => m.holeNumber === holeNumber)
   }
 
   const getMulligansUsed = (playerId: string): number => {
     if (!round) return 0
-    const player = round.players.find(p => p.id === playerId)
-    if (!player || !player.mulligans) return 0
-    return player.mulligans.length
+    const player = round.RoundPlayer.find(p => p.id === playerId)
+    if (!player || !player.Mulligan) return 0
+    return player.Mulligan.length
   }
 
   const getMulligansRemaining = (playerId: string): number => {
     if (!round) return 0
-    const player = round.players.find(p => p.id === playerId)
+    const player = round.RoundPlayer.find(p => p.id === playerId)
     if (!player) return 0
     const used = getMulligansUsed(playerId)
     return Math.max(0, (player.mulligansAllowed || 0) - used)
@@ -179,21 +179,21 @@ export default function RoundDetailPage() {
 
   const getPlayerScore = (playerId: string, holeNumber: number): number | null => {
     if (!round) return null
-    const player = round.players.find(p => p.id === playerId)
+    const player = round.RoundPlayer.find(p => p.id === playerId)
     if (!player) return null
-    const score = player.scores.find(s => s.holeNumber === holeNumber)
+    const score = player.Score.find(s => s.holeNumber === holeNumber)
     return score?.score || null
   }
 
   const getPlayerTotal = (playerId: string): number => {
     if (!round) return 0
-    const player = round.players.find(p => p.id === playerId)
+    const player = round.RoundPlayer.find(p => p.id === playerId)
     if (!player) return 0
-    return player.scores.reduce((sum, score) => sum + score.score, 0)
+    return player.Score.reduce((sum, score) => sum + score.score, 0)
   }
 
   const getHolePar = (holeNumber: number): number => {
-    return round?.course.holes.find(h => h.number === holeNumber)?.par || 4
+    return round?.Course.Hole.find(h => h.number === holeNumber)?.par || 4
   }
 
   if (loading || !round) {
@@ -204,7 +204,7 @@ export default function RoundDetailPage() {
     )
   }
 
-  const holes = round?.course.holes || Array.from({ length: 18 }, (_, i) => ({ number: i + 1, par: 4 }))
+  const holes = round?.Course.Hole || Array.from({ length: 18 }, (_, i) => ({ number: i + 1, par: 4 }))
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
@@ -212,7 +212,7 @@ export default function RoundDetailPage() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0 mb-6 sm:mb-8">
           <div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-              {round.course.name}
+              {round.Course.name}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
               {new Date(round.createdAt).toLocaleDateString()}
@@ -243,7 +243,7 @@ export default function RoundDetailPage() {
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-200/50 dark:border-gray-700/50">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Total Scores</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {round.players.map((player) => {
+            {round.RoundPlayer.map((player) => {
               const total = getPlayerTotal(player.id)
               const mulligansUsed = getMulligansUsed(player.id)
               const mulligansRemaining = getMulligansRemaining(player.id)
@@ -272,7 +272,7 @@ export default function RoundDetailPage() {
               <tr className="border-b border-gray-200 dark:border-gray-700">
                 <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Hole</th>
                 <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Par</th>
-                {round.players.map((player) => (
+                {round.RoundPlayer.map((player) => (
                   <th key={player.id} className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">
                     {player.name}
                   </th>
@@ -284,7 +284,7 @@ export default function RoundDetailPage() {
                 <tr key={hole.number} className="border-b border-gray-100 dark:border-gray-800">
                   <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{hole.number}</td>
                   <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">{hole.par}</td>
-                  {round.players.map((player) => {
+                  {round.RoundPlayer.map((player) => {
                     const currentScore = getPlayerScore(player.id, hole.number)
                     const usedMulligan = hasMulligan(player.id, hole.number)
                     const canUseMulligan = (player.mulligansAllowed || 0) > 0 && getMulligansRemaining(player.id) > 0 && !usedMulligan
@@ -334,7 +334,7 @@ export default function RoundDetailPage() {
                 <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">
                   {holes.reduce((sum, h) => sum + h.par, 0)}
                 </td>
-                {round.players.map((player) => {
+                {round.RoundPlayer.map((player) => {
                   const total = getPlayerTotal(player.id)
                   return (
                     <td key={player.id} className="py-4 px-4 text-center text-green-600 dark:text-green-400">

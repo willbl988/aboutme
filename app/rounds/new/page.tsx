@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 interface Course {
   id: string
   name: string
-  holes: { number: number; par: number; yardage?: number }[]
+  Hole: { number: number; par: number; yardage?: number }[]
 }
 
 interface Player {
@@ -184,7 +184,7 @@ function NewRoundContent() {
               <option value="">Choose a course...</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
-                  {course.name} ({course.holes.length} holes)
+                  {course.name} ({course.Hole.length} holes)
                 </option>
               ))}
             </select>
