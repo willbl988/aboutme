@@ -20,6 +20,9 @@ export interface WagerResult {
     amount: string // Amount owed
     reason?: string // Why they owe (e.g., "Won hole 5", "Lowest score")
   }>
+  isTie?: boolean // True if all participants are tied
+  tieScore?: number // The score that was tied
+  tieParticipants?: string[] // Names of players who tied
 }
 
 export function calculateWagerResults(
@@ -76,12 +79,15 @@ export function calculateWagerResults(
       case 'custom': {
         // Lowest total score wins
         const sorted = [...participantScores].sort((a, b) => a.total - b.total)
-        const winner = sorted[0]
+        const lowestScore = sorted[0]?.total
+        const winners = sorted.filter(ps => ps.total === lowestScore)
         const amount = parseFloat(wager.amount?.replace(/[^0-9.]/g, '') || '0')
 
-        if (amount > 0 && winner) {
+        // Only create transactions if there's a clear winner (no tie)
+        if (amount > 0 && winners.length === 1) {
+          const winner = winners[0]
           // Losers pay winner
-          sorted.slice(1).forEach((loser) => {
+          sorted.filter(ps => ps.total !== lowestScore).forEach((loser) => {
             transactions.push({
               from: loser.playerName,
               to: winner.playerName,
@@ -90,6 +96,7 @@ export function calculateWagerResults(
             })
           })
         }
+        // If tie (winners.length > 1), no transactions will be created
         break
       }
 
@@ -140,43 +147,64 @@ export function calculateWagerResults(
         // Front 9
         if (frontValue > 0) {
           const sorted = [...participantScores].sort((a, b) => a.front9 - b.front9)
-          const winner = sorted[0]
-          sorted.slice(1).forEach((loser) => {
-            transactions.push({
-              from: loser.playerName,
-              to: winner.playerName,
-              amount: `$${frontValue.toFixed(2)}`,
-              reason: `Front 9: ${winner.playerName} won with ${winner.front9} (${loser.playerName} had ${loser.front9})`,
+          const lowestScore = sorted[0]?.front9
+          const winners = sorted.filter(ps => ps.front9 === lowestScore)
+          
+          // Only create transactions if there's a clear winner (no tie)
+          if (winners.length === 1) {
+            const winner = winners[0]
+            sorted.filter(ps => ps.front9 !== lowestScore).forEach((loser) => {
+              transactions.push({
+                from: loser.playerName,
+                to: winner.playerName,
+                amount: `$${frontValue.toFixed(2)}`,
+                reason: `Front 9: ${winner.playerName} won with ${winner.front9} (${loser.playerName} had ${loser.front9})`,
+              })
             })
-          })
+          }
+          // If tie, no transactions
         }
 
         // Back 9
         if (backValue > 0) {
           const sorted = [...participantScores].sort((a, b) => a.back9 - b.back9)
-          const winner = sorted[0]
-          sorted.slice(1).forEach((loser) => {
-            transactions.push({
-              from: loser.playerName,
-              to: winner.playerName,
-              amount: `$${backValue.toFixed(2)}`,
-              reason: `Back 9: ${winner.playerName} won with ${winner.back9} (${loser.playerName} had ${loser.back9})`,
+          const lowestScore = sorted[0]?.back9
+          const winners = sorted.filter(ps => ps.back9 === lowestScore)
+          
+          // Only create transactions if there's a clear winner (no tie)
+          if (winners.length === 1) {
+            const winner = winners[0]
+            sorted.filter(ps => ps.back9 !== lowestScore).forEach((loser) => {
+              transactions.push({
+                from: loser.playerName,
+                to: winner.playerName,
+                amount: `$${backValue.toFixed(2)}`,
+                reason: `Back 9: ${winner.playerName} won with ${winner.back9} (${loser.playerName} had ${loser.back9})`,
+              })
             })
-          })
+          }
+          // If tie, no transactions
         }
 
         // Overall
         if (overallValue > 0) {
           const sorted = [...participantScores].sort((a, b) => a.total - b.total)
-          const winner = sorted[0]
-          sorted.slice(1).forEach((loser) => {
-            transactions.push({
-              from: loser.playerName,
-              to: winner.playerName,
-              amount: `$${overallValue.toFixed(2)}`,
-              reason: `Overall: ${winner.playerName} won with ${winner.total} (${loser.playerName} had ${loser.total})`,
+          const lowestScore = sorted[0]?.total
+          const winners = sorted.filter(ps => ps.total === lowestScore)
+          
+          // Only create transactions if there's a clear winner (no tie)
+          if (winners.length === 1) {
+            const winner = winners[0]
+            sorted.filter(ps => ps.total !== lowestScore).forEach((loser) => {
+              transactions.push({
+                from: loser.playerName,
+                to: winner.playerName,
+                amount: `$${overallValue.toFixed(2)}`,
+                reason: `Overall: ${winner.playerName} won with ${winner.total} (${loser.playerName} had ${loser.total})`,
+              })
             })
-          })
+          }
+          // If tie, no transactions
         }
         break
       }
@@ -189,13 +217,32 @@ export function calculateWagerResults(
       }
     }
 
-    if (transactions.length > 0) {
-      results.push({
-        wagerId: wager.id,
-        wagerDescription: wager.description,
-        transactions,
-      })
+    // Check if this is a tie situation (all participants have same score and no transactions)
+    let isTie = false
+    let tieScore: number | undefined
+    let tieParticipants: string[] | undefined
+
+    if (transactions.length === 0 && participantScores.length > 1) {
+      const scores = participantScores.map(ps => ps.total)
+      const allSameScore = scores.every(score => score === scores[0])
+      if (allSameScore) {
+        isTie = true
+        tieScore = scores[0]
+        tieParticipants = participantScores.map(ps => ps.playerName)
+      }
     }
+
+    // Always add result, even if no transactions (to show tie message)
+    results.push({
+      wagerId: wager.id,
+      wagerDescription: wager.description,
+      transactions,
+      ...(isTie && {
+        isTie: true,
+        tieScore,
+        tieParticipants,
+      }),
+    })
   })
 
   return results

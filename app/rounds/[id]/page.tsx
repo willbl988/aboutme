@@ -391,8 +391,22 @@ export default function RoundDetailPage() {
                           </div>
                         ))}
                       </div>
+                    ) : result.isTie ? (
+                      <div className="text-sm">
+                        <p className="text-blue-600 dark:text-blue-400 font-medium mb-1">
+                          ✓ Tie - No money owed
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          All participants tied with a score of {result.tieScore}. No wager payouts.
+                        </p>
+                        {result.tieParticipants && result.tieParticipants.length > 0 && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Tied players: {result.tieParticipants.join(', ')}
+                          </p>
+                        )}
+                      </div>
                     ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">No transactions (ties or incomplete)</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">No transactions (incomplete scores)</p>
                     )}
                   </div>
                 ))}
