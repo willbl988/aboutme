@@ -164,7 +164,7 @@ export default function RoundsPage() {
                   >
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                        {round.course.name}
+                        {round.Course.name}
                       </h2>
                       <p className="text-gray-600 dark:text-gray-400">
                         {new Date(round.createdAt).toLocaleDateString()}
