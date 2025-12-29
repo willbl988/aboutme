@@ -61,22 +61,25 @@ const STATE_MAPPINGS: Record<string, string[]> = {
 
 // Helper function to expand search terms with state name/abbreviation mappings
 function expandSearchTerms(terms: string[]): string[] {
-  const expanded = new Set<string>(terms)
+  const expanded = new Set<string>()
   
   for (const term of terms) {
     const termLower = term.toLowerCase()
     
+    // Always add the lowercase version of the original term
+    expanded.add(termLower)
+    
     // Check if term is a state name - add abbreviation
     if (STATE_MAPPINGS[termLower]) {
-      STATE_MAPPINGS[termLower].forEach(abbr => expanded.add(abbr))
+      STATE_MAPPINGS[termLower].forEach(abbr => expanded.add(abbr.toLowerCase()))
     }
     
     // Check if term is a state abbreviation - add full name
     for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
-      if (abbreviations.includes(termLower)) {
-        expanded.add(stateName)
+      if (abbreviations.map(a => a.toLowerCase()).includes(termLower)) {
+        expanded.add(stateName.toLowerCase())
         // Also add individual words for multi-word states
-        stateName.split(' ').forEach(word => expanded.add(word))
+        stateName.split(' ').forEach(word => expanded.add(word.toLowerCase()))
       }
     }
   }
@@ -846,6 +849,7 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
 
   // Expand search terms to include state name/abbreviation variations
   const expandedTerms = expandSearchTerms(searchTerms)
+  console.log(`[searchPopularCourses] Query: "${query}", Expanded terms:`, expandedTerms)
   
   // Check if this is a state search
   const isStateSearch = expandedTerms.some(term => {
@@ -858,6 +862,8 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
     return false
   })
   
+  console.log(`[searchPopularCourses] Is state search: ${isStateSearch}`)
+  
   const filtered = POPULAR_COURSES.filter((course) => {
     // For state searches, ONLY match courses in that state
     if (isStateSearch) {
@@ -868,28 +874,36 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
       const courseStateLower = course.state.toLowerCase()
       
       // Check if course state matches any expanded term
-      return expandedTerms.some(term => {
+      const matches = expandedTerms.some(term => {
         const termLower = term.toLowerCase()
         
-        // Exact match
+        // Direct match: course state abbreviation matches term (e.g., "al" === "al")
         if (courseStateLower === termLower) {
           return true
         }
         
-        // Check if term is a state name and course state is the abbreviation
-        if (STATE_MAPPINGS[termLower] && STATE_MAPPINGS[termLower].includes(courseStateLower)) {
-          return true
+        // If term is a state name (e.g., "alabama"), check if course state is its abbreviation
+        // STATE_MAPPINGS["alabama"] = ["al"], so check if "al" (courseStateLower) is in ["al"]
+        if (STATE_MAPPINGS[termLower]) {
+          const abbreviations = STATE_MAPPINGS[termLower]
+          if (abbreviations.map(a => a.toLowerCase()).includes(courseStateLower)) {
+            return true
+          }
         }
         
-        // Check if term is an abbreviation and course state is the full name
+        // If term is an abbreviation (e.g., "al"), check if it matches course state
+        // This is already covered by the direct match above, but keep for clarity
         for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
-          if (abbreviations.includes(termLower) && stateName === courseStateLower) {
+          const abbrevLower = abbreviations.map(a => a.toLowerCase())
+          if (abbrevLower.includes(termLower) && courseStateLower === termLower) {
             return true
           }
         }
         
         return false
       })
+      
+      return matches
     }
     
     // For non-state searches, check searchable text
@@ -907,6 +921,11 @@ export function searchPopularCourses(query: string, limit: number = 20): CourseA
     return expandedTerms.some((term) => searchableText.includes(term.toLowerCase()))
   })
 
+  console.log(`[searchPopularCourses] Filtered ${filtered.length} courses from ${POPULAR_COURSES.length} total`)
+  if (isStateSearch && filtered.length > 0) {
+    console.log(`[searchPopularCourses] Sample filtered courses:`, filtered.slice(0, 3).map(c => `${c.name} (${c.state})`))
+  }
+  
   // Score and sort by relevance
   const scored = filtered.map((course) => {
     let score = 0

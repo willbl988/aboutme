@@ -8,3 +8,103 @@
   }
 }
 
+@layer base {
+  * {
+    @apply transition-colors duration-200;
+  }
+}
+
+@layer components {
+  /* Modern card with glassmorphism */
+  .card-modern {
+    @apply bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30;
+  }
+
+  /* Smooth scale animation */
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent;
+  }
+
+  /* Modern button */
+  .btn-modern {
+    @apply px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl;
+  }
+
+  /* Animated gradient background */
+  .animated-gradient {
+    background: linear-gradient(-45deg, #10b981, #059669, #047857, #065f46);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  /* Stagger animation for cards */
+  .stagger-item {
+    animation: fadeIn 0.6s ease-out;
+    animation-fill-mode: both;
+  }
+
+  .stagger-item:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-item:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-item:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-item:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-item:nth-child(6) { animation-delay: 0.6s; }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply animate-pulse bg-gray-200 dark:bg-green-900/20 rounded;
+  }
+
+  /* Touch-friendly button */
+  .btn-touch {
+    @apply min-h-[44px] min-w-[44px] px-4 py-3;
+  }
+
+  /* Mobile-optimized card */
+  .card-mobile {
+    @apply p-4 sm:p-6 rounded-xl;
+  }
+
+  /* Safe area for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+

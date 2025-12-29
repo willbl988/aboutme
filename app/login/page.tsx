@@ -92,9 +92,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50">
+        <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-green-800/30">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
               Golf Budz
@@ -122,7 +122,7 @@ export default function LoginPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required={isSignUp}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
                   placeholder="Your name"
                 />
               </div>

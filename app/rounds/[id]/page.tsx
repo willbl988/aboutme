@@ -225,14 +225,14 @@ export default function RoundDetailPage() {
 
   if (loading || !round) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0 mb-6 sm:mb-8">
           <div>
@@ -277,7 +277,7 @@ export default function RoundDetailPage() {
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-center ${
                 round.status === 'active'
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                  : 'bg-gray-100 dark:bg-green-800/30 text-gray-800 dark:text-gray-300'
               }`}
             >
               {round.status}
@@ -286,7 +286,7 @@ export default function RoundDetailPage() {
         </div>
 
         {/* Score Summary */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-200/50 dark:border-gray-700/50">
+        <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-200/50 dark:border-green-800/30">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Total Scores</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {round.RoundPlayer.map((player) => {
@@ -294,7 +294,7 @@ export default function RoundDetailPage() {
               const mulligansUsed = getMulligansUsed(player.id)
               const mulligansRemaining = getMulligansRemaining(player.id)
               return (
-                <div key={player.id} className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div key={player.id} className="text-center p-4 bg-gray-50 dark:bg-green-800/30 rounded-lg">
                   <p className="font-semibold text-gray-900 dark:text-white mb-2">{player.name}</p>
                   <p className="text-3xl font-bold text-green-600 dark:text-green-400">{total || 0}</p>
                   {(player.mulligansAllowed || 0) > 0 && (
@@ -313,7 +313,7 @@ export default function RoundDetailPage() {
 
         {/* Wager Results - Who Owes Who */}
         {wagerResults.length > 0 && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-200/50 dark:border-green-800/30">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">💰 Wager Results</h2>
             
             {/* Net Amounts Summary */}
@@ -331,7 +331,7 @@ export default function RoundDetailPage() {
                             ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                             : net.net < 0
                             ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                            : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                            : 'bg-gray-50 dark:bg-green-800/30 border-gray-200 dark:border-green-700'
                         }`}
                       >
                         <div className="flex justify-between items-center">
@@ -375,7 +375,7 @@ export default function RoundDetailPage() {
                 {wagerResults.map((result) => (
                   <div
                     key={result.wagerId}
-                    className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+                    className="bg-gray-50 dark:bg-green-800/30 rounded-lg p-4 border border-gray-200 dark:border-green-700"
                   >
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{result.wagerDescription}</h4>
                     {result.transactions.length > 0 ? (
@@ -419,7 +419,7 @@ export default function RoundDetailPage() {
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
+              <tr className="border-b border-gray-200 dark:border-green-800/30">
                 <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Hole</th>
                 <th className="text-center py-3 px-4 font-semibold text-gray-900 dark:text-white">Par</th>
                 {round.RoundPlayer.map((player) => (
@@ -431,7 +431,7 @@ export default function RoundDetailPage() {
             </thead>
             <tbody>
               {holes.map((hole) => (
-                <tr key={hole.number} className="border-b border-gray-100 dark:border-gray-800">
+                <tr key={hole.number} className="border-b border-gray-100 dark:border-green-800/30">
                   <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{hole.number}</td>
                   <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">{hole.par}</td>
                   {round.RoundPlayer.map((player) => {
@@ -453,7 +453,7 @@ export default function RoundDetailPage() {
                               }
                             }}
                             disabled={round.status === 'completed'}
-                            className="w-16 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-center focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-16 px-2 py-1 border border-gray-300 dark:border-green-700 rounded text-center focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             placeholder="-"
                           />
                           {(player.mulligansAllowed || 0) > 0 && (
@@ -464,8 +464,8 @@ export default function RoundDetailPage() {
                                 usedMulligan
                                   ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-semibold'
                                   : canUseMulligan
-                                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                  : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                  ? 'bg-gray-100 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-green-800/50'
+                                  : 'bg-gray-50 dark:bg-green-900/20 text-gray-400 dark:text-gray-600 cursor-not-allowed'
                               } disabled:opacity-50 disabled:cursor-not-allowed`}
                               title={usedMulligan ? 'Mulligan used - click to remove' : canUseMulligan ? 'Click to use mulligan' : 'No mulligans remaining'}
                             >
@@ -479,7 +479,7 @@ export default function RoundDetailPage() {
                 </tr>
               ))}
               {/* Totals Row */}
-              <tr className="bg-gray-50 dark:bg-gray-700/50 font-bold">
+              <tr className="bg-gray-50 dark:bg-green-800/30 font-bold">
                 <td className="py-4 px-4 text-gray-900 dark:text-white">Total</td>
                 <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">
                   {holes.reduce((sum, h) => sum + h.par, 0)}

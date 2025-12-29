@@ -99,7 +99,7 @@ export default function StatisticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     )
@@ -107,13 +107,13 @@ export default function StatisticsPage() {
 
   if (!stats || stats.totalRounds === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-8">
             Statistics
           </h1>
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-green-800/30">
+            <p className="text-gray-700 dark:text-gray-300 text-lg mb-4">
               No completed rounds yet. Complete a round to see your statistics!
             </p>
             <Link
@@ -137,16 +137,16 @@ export default function StatisticsPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Rounds</p>
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30">
+            <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">Total Rounds</p>
             <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.totalRounds}</p>
           </div>
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Holes Played</p>
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30">
+            <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">Total Holes Played</p>
             <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.totalHoles}</p>
           </div>
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Courses Played</p>
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30">
+            <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">Courses Played</p>
             <p className="text-4xl font-bold text-green-600 dark:text-green-400">{stats.courseStats.length}</p>
           </div>
         </div>
@@ -155,11 +155,11 @@ export default function StatisticsPage() {
         {(stats.bestRound || stats.worstRound) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {stats.bestRound && (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
+              <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">🏆 Best Round</h2>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{stats.bestRound.score}</p>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">{stats.bestRound.courseName}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
+                <p className="text-gray-700 dark:text-gray-300 mb-1">{stats.bestRound.courseName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {new Date(stats.bestRound.date).toLocaleDateString()}
                 </p>
                 <Link
@@ -171,11 +171,11 @@ export default function StatisticsPage() {
               </div>
             )}
             {stats.worstRound && (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
+              <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">📊 Worst Round</h2>
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">{stats.worstRound.score}</p>
-                <p className="text-gray-600 dark:text-gray-400 mb-1">{stats.worstRound.courseName}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
+                <p className="text-gray-700 dark:text-gray-300 mb-1">{stats.worstRound.courseName}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {new Date(stats.worstRound.date).toLocaleDateString()}
                 </p>
                 <Link
@@ -194,20 +194,20 @@ export default function StatisticsPage() {
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 mb-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💰 Wager Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Bet</div>
+              <div className="bg-white/50 dark:bg-green-800/30 rounded-lg p-4">
+                <div className="text-sm text-gray-700 dark:text-gray-300 mb-1">Total Bet</div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   ${wagerStats.totalBet.toFixed(2)}
                 </div>
               </div>
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Won</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 mb-1">Total Won</div>
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   ${wagerStats.totalWon.toFixed(2)}
                 </div>
               </div>
               <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Lost</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 mb-1">Total Lost</div>
                 <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                   ${wagerStats.totalLost.toFixed(2)}
                 </div>
@@ -217,7 +217,7 @@ export default function StatisticsPage() {
                   ? 'bg-green-50 dark:bg-green-900/20'
                   : 'bg-red-50 dark:bg-red-900/20'
               }`}>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Amount</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 mb-1">Net Amount</div>
                 <div className={`text-2xl font-bold ${
                   wagerStats.netAmount >= 0
                     ? 'text-green-600 dark:text-green-400'
@@ -237,7 +237,7 @@ export default function StatisticsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <tr className="border-b border-gray-200 dark:border-green-800/30">
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Course</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Rounds</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Avg Score</th>
@@ -247,9 +247,9 @@ export default function StatisticsPage() {
                 </thead>
                 <tbody>
                   {stats.courseStats.map((course) => (
-                    <tr key={course.courseName} className="border-b border-gray-100 dark:border-gray-800">
+                    <tr key={course.courseName} className="border-b border-gray-100 dark:border-green-800/30">
                       <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{course.courseName}</td>
-                      <td className="py-3 px-4 text-right text-gray-600 dark:text-gray-400">{course.rounds}</td>
+                      <td className="py-3 px-4 text-right text-gray-700 dark:text-gray-300">{course.rounds}</td>
                       <td className="py-3 px-4 text-right font-semibold text-green-600 dark:text-green-400">
                         {course.averageScore.toFixed(1)}
                       </td>
@@ -265,19 +265,19 @@ export default function StatisticsPage() {
 
         {/* Recent Rounds */}
         {stats.recentRounds.length > 0 && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Recent Rounds</h2>
             <div className="space-y-4">
               {stats.recentRounds.map((round) => (
                 <Link
                   key={round.id}
                   href={`/rounds/${round.id}`}
-                  className="block p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+                  className="block p-4 bg-white/50 dark:bg-green-950/30 rounded-lg hover:bg-white/80 dark:hover:bg-green-900/40 transition-colors"
                 >
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold text-gray-900 dark:text-white">{round.courseName}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
                         {new Date(round.date).toLocaleDateString()}
                       </p>
                     </div>

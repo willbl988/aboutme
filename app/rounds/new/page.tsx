@@ -285,7 +285,7 @@ function NewRoundContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     )
@@ -299,7 +299,7 @@ function NewRoundContent() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-green-800/30">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
               Select Course
             </label>
@@ -310,7 +310,7 @@ function NewRoundContent() {
                 setSelectedCourse(course || null)
               }}
               required
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
             >
               <option value="">Choose a course...</option>
               {courses.map((course) => (
@@ -321,14 +321,14 @@ function NewRoundContent() {
             </select>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-green-800/30">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
               Game Mode
             </label>
             <select
               value={gameMode}
               onChange={(e) => setGameMode(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
             >
               <option value="stroke">Stroke Play (Standard)</option>
               <option value="scramble">Scramble</option>
@@ -345,7 +345,7 @@ function NewRoundContent() {
             </p>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-green-800/30">
             <WagerManager
               wagers={wagers}
               players={players.filter(p => p.name.trim()).map(p => p.name)}
@@ -353,7 +353,7 @@ function NewRoundContent() {
             />
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-green-800/30">
             <div className="flex justify-between items-center mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Players
@@ -386,7 +386,7 @@ function NewRoundContent() {
                           setTimeout(() => setActiveSearchPlayerId(null), 200)
                         }}
                         placeholder={`Player ${index + 1} name`}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
                       />
                       {player.userId && (
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
@@ -394,7 +394,7 @@ function NewRoundContent() {
                         </span>
                       )}
                       {showResults && (
-                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-green-900/30 border border-gray-300 dark:border-green-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {searchResults.map((user) => (
                             <button
                               key={user.id}
@@ -418,7 +418,7 @@ function NewRoundContent() {
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                           player.mulligansEnabled
                             ? 'bg-green-600'
-                            : 'bg-gray-300 dark:bg-gray-600'
+                            : 'bg-gray-300 dark:bg-green-800/50'
                         }`}
                       >
                         <span
@@ -439,7 +439,7 @@ function NewRoundContent() {
                           // Select all text when focused to make it easier to replace
                           e.target.select()
                         }}
-                        className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-20 sm:w-20 px-3 py-2 border border-gray-300 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white"
                       />
                     )}
                   </div>
@@ -463,7 +463,7 @@ function NewRoundContent() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
+              className="flex-1 px-6 py-3 bg-gray-200 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-green-800/50 transition-all"
             >
               Cancel
             </button>
@@ -484,7 +484,7 @@ function NewRoundContent() {
 export default function NewRoundPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     }>

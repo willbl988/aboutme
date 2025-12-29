@@ -59,22 +59,25 @@ const STATE_MAPPINGS: Record<string, string[]> = {
 
 // Helper function to expand search terms with state name/abbreviation mappings
 function expandSearchTerms(terms: string[]): string[] {
-  const expanded = new Set<string>(terms)
+  const expanded = new Set<string>()
   
   for (const term of terms) {
     const termLower = term.toLowerCase()
     
+    // Always add the lowercase version of the original term
+    expanded.add(termLower)
+    
     // Check if term is a state name - add abbreviation
     if (STATE_MAPPINGS[termLower]) {
-      STATE_MAPPINGS[termLower].forEach(abbr => expanded.add(abbr))
+      STATE_MAPPINGS[termLower].forEach(abbr => expanded.add(abbr.toLowerCase()))
     }
     
     // Check if term is a state abbreviation - add full name
     for (const [stateName, abbreviations] of Object.entries(STATE_MAPPINGS)) {
-      if (abbreviations.includes(termLower)) {
-        expanded.add(stateName)
+      if (abbreviations.map(a => a.toLowerCase()).includes(termLower)) {
+        expanded.add(stateName.toLowerCase())
         // Also add individual words for multi-word states
-        stateName.split(' ').forEach(word => expanded.add(word))
+        stateName.split(' ').forEach(word => expanded.add(word.toLowerCase()))
       }
     }
   }

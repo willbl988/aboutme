@@ -474,14 +474,25 @@ export default function CoursesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+          <div className="skeleton h-12 w-64 mb-8 bg-gray-300 dark:bg-green-800/30"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton bg-white/80 dark:bg-green-900/30 rounded-2xl p-6">
+                <div className="skeleton h-6 w-3/4 mb-4 bg-gray-300 dark:bg-green-800/30"></div>
+                <div className="skeleton h-4 w-full mb-2 bg-gray-300 dark:bg-green-800/30"></div>
+                <div className="skeleton h-4 w-5/6 bg-gray-300 dark:bg-green-800/30"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
@@ -493,7 +504,7 @@ export default function CoursesPage() {
                 setShowForm(!showForm)
                 setActiveTab('yours')
               }}
-              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto"
+              className="btn-touch px-4 sm:px-6 py-3 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl text-base w-full sm:w-auto active:scale-95"
             >
               {showForm ? 'Cancel' : '+ Create Course'}
             </button>
@@ -502,7 +513,7 @@ export default function CoursesPage() {
 
         {/* Create Course Form - Show before tabs when active */}
         {showForm && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-green-800/30">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Course</h2>
               <button
@@ -519,7 +530,7 @@ export default function CoursesPage() {
                   })
                   setNumberOfHoles(18)
                 }}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl font-bold"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 text-2xl font-bold"
               >
                 ✕
               </button>
@@ -534,7 +545,7 @@ export default function CoursesPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                  className="w-full px-4 py-3.5 text-base border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   placeholder="Pebble Beach Golf Links"
                 />
               </div>
@@ -562,7 +573,7 @@ export default function CoursesPage() {
                     className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                       numberOfHoles === 9
                         ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        : 'bg-gray-200 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-green-800/50'
                     }`}
                   >
                     9 Holes
@@ -585,7 +596,7 @@ export default function CoursesPage() {
                     className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                       numberOfHoles === 18
                         ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        : 'bg-gray-200 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-green-800/50'
                     }`}
                   >
                     18 Holes
@@ -600,7 +611,7 @@ export default function CoursesPage() {
                 <div className={`grid gap-4 ${numberOfHoles === 9 ? 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9' : 'grid-cols-3 md:grid-cols-6 lg:grid-cols-9'}`}>
                   {formData.holes.map((hole, index) => (
                     <div key={index} className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                         Hole {hole.number}
                       </label>
                       <input
@@ -613,7 +624,7 @@ export default function CoursesPage() {
                           newHoles[index].par = parseInt(e.target.value) || 4
                           setFormData({ ...formData, holes: newHoles })
                         }}
-                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-green-700 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white text-sm"
                         placeholder="Par"
                       />
                     </div>
@@ -633,7 +644,7 @@ export default function CoursesPage() {
 
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex gap-2 border-b border-gray-200 dark:border-green-800/30">
             <button
               onClick={() => {
                 setActiveTab('yours')
@@ -642,7 +653,7 @@ export default function CoursesPage() {
               className={`px-6 py-3 font-semibold transition-all border-b-2 ${
                 activeTab === 'yours'
                   ? 'border-green-600 text-green-600 dark:text-green-400'
-                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
               📋 Your Courses
@@ -655,7 +666,7 @@ export default function CoursesPage() {
               className={`px-6 py-3 font-semibold transition-all border-b-2 ${
                 activeTab === 'import'
                   ? 'border-green-600 text-green-600 dark:text-green-400'
-                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
               🌐 Import from Database
@@ -671,7 +682,7 @@ export default function CoursesPage() {
                 <div className="text-3xl">🌐</div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Import Course from External Database</h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                     Search 30,000+ golf courses from external databases. Imported courses will be added to your course list.
                   </p>
                 </div>
@@ -692,7 +703,7 @@ export default function CoursesPage() {
                   }}
                   onKeyPress={(e) => e.key === 'Enter' && searchApiCourses(1, false)}
                   placeholder="Search 30,000+ courses by name, city, or state (e.g., 'Pebble Beach', 'Dallas', 'Alabama')..."
-                  className="flex-1 px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-base"
+                  className="flex-1 px-4 py-3 border-2 border-blue-300 dark:border-blue-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-green-900/20 dark:text-white text-base"
                 />
                 <button
                   onClick={() => searchApiCourses(1, false)}
@@ -707,7 +718,11 @@ export default function CoursesPage() {
                 <div className="space-y-4 mt-6">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Showing {apiSearchResults.length} of {apiSearchTotal} course(s)
+                      {apiSearchTotal > 0 ? (
+                        <>Showing {Math.min(apiSearchResults.length, apiSearchTotal)} of {apiSearchTotal} course{apiSearchTotal !== 1 ? 's' : ''}</>
+                      ) : (
+                        <>Found {apiSearchResults.length} course{apiSearchResults.length !== 1 ? 's' : ''}</>
+                      )}
                     </h3>
                     {apiSearchHasMore && (
                       <button
@@ -722,7 +737,7 @@ export default function CoursesPage() {
                   {apiSearchResults.map((course) => (
                     <div
                       key={course.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50"
+                      className="border border-gray-200/50 dark:border-green-800/30 rounded-lg p-4 bg-white/50 dark:bg-green-950/30"
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div>
@@ -730,7 +745,7 @@ export default function CoursesPage() {
                             {course.name}
                           </h4>
                           {(course.city || course.state) && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-gray-700 dark:text-gray-300">
                               {[course.city, course.state, course.country].filter(Boolean).join(', ')}
                             </p>
                           )}
@@ -745,37 +760,37 @@ export default function CoursesPage() {
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm mb-2">
                         <div>
-                          <span className="text-gray-600 dark:text-gray-400">Holes:</span>
+                            <span className="text-gray-700 dark:text-gray-300">Holes:</span>
                           <span className="ml-2 font-semibold text-gray-900 dark:text-white">
                             {course.holes.length}
                           </span>
                         </div>
                         {course.totalPar && course.totalPar > 0 ? (
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">Par:</span>
+                            <span className="text-gray-700 dark:text-gray-300">Par:</span>
                             <span className="ml-2 font-semibold text-gray-900 dark:text-white">
                               {course.totalPar}
                             </span>
                           </div>
                         ) : (
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">Par:</span>
-                            <span className="ml-2 font-semibold text-gray-500 dark:text-gray-500">
+                            <span className="text-gray-700 dark:text-gray-300">Par:</span>
+                            <span className="ml-2 font-semibold text-gray-600 dark:text-gray-400">
                               N/A
                             </span>
                           </div>
                         )}
                         {course.totalYardage && course.totalYardage > 0 ? (
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">Yardage:</span>
+                            <span className="text-gray-700 dark:text-gray-300">Yardage:</span>
                             <span className="ml-2 font-semibold text-gray-900 dark:text-white">
                               {course.totalYardage.toLocaleString()} yds
                             </span>
                           </div>
                         ) : (
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">Yardage:</span>
-                            <span className="ml-2 font-semibold text-gray-500 dark:text-gray-500">
+                            <span className="text-gray-700 dark:text-gray-300">Yardage:</span>
+                            <span className="ml-2 font-semibold text-gray-600 dark:text-gray-400">
                               N/A
                             </span>
                           </div>
@@ -801,7 +816,7 @@ export default function CoursesPage() {
                         onClick={loadMoreApiCourses}
                         className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all"
                       >
-                        Load More ({apiSearchTotal - apiSearchResults.length} remaining)
+                        Load More ({Math.max(0, apiSearchTotal - apiSearchResults.length)} remaining)
                       </button>
                     </div>
                   )}
@@ -809,7 +824,7 @@ export default function CoursesPage() {
               )}
 
               {apiSearchQuery && !apiSearchLoading && apiSearchResults.length === 0 && (
-                <p className="text-gray-600 dark:text-gray-400 text-center py-8">
+                <p className="text-gray-700 dark:text-gray-300 text-center py-8">
                   No courses found. Try a different search term.
                 </p>
               )}
@@ -827,7 +842,7 @@ export default function CoursesPage() {
                   Search Your Courses
                 </label>
               </div>
-              <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
+              <p className="text-xs text-gray-700 dark:text-gray-300 mb-3">
                 Filter your existing courses by name, city, state, or address
               </p>
               <input
@@ -835,26 +850,26 @@ export default function CoursesPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search your courses by name, city, state, or address..."
-                className="w-full md:w-96 px-4 py-3 border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className="w-full md:w-96 px-4 py-3.5 text-base border-2 border-green-200 dark:border-green-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
             {courses.length === 0 ? (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
-                <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
+              <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-green-800/30">
+                <p className="text-gray-700 dark:text-gray-300 text-lg mb-4">
                   {searchQuery ? 'No courses found matching your search.' : 'No courses yet. Create your first course or import one from the database!'}
                 </p>
                 {!searchQuery && (
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <button
                       onClick={() => setShowForm(true)}
-                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all"
+                      className="btn-touch px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all active:scale-95"
                     >
                       + Create Course
                     </button>
                     <button
                       onClick={() => setActiveTab('import')}
-                      className="px-6 py-3 bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
+                      className="btn-touch px-6 py-3 bg-white/80 dark:bg-green-900/30 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-green-800/30 rounded-lg font-semibold hover:bg-gray-100 dark:hover:bg-green-800/50 transition-all active:scale-95"
                     >
                       🌐 Import from Database
                     </button>
@@ -862,37 +877,37 @@ export default function CoursesPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {courses.map((course) => (
                   <div
                     key={course.id}
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
+                    className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200/50 dark:border-green-800/30 hover:shadow-xl transition-all relative card-mobile"
                   >
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                       {course.name}
                     </h2>
                     {(course.city || course.state || course.country) && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                         {[course.city, course.state, course.country].filter(Boolean).join(', ')}
                       </p>
                     )}
                     {course.address && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                         {course.address}
                       </p>
                     )}
                     <div className="space-y-2 mb-4">
-                      <p className="text-gray-600 dark:text-gray-300">
+                      <p className="text-gray-700 dark:text-gray-300">
                         {course.Hole.length} holes
                       </p>
                       {course.Hole.length > 0 && course.Hole[0].yardage && (
                         <div className="flex flex-wrap gap-3 text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">
+                          <span className="text-gray-700 dark:text-gray-300">
                             Par: <span className="font-semibold text-gray-900 dark:text-white">
                               {course.Hole.reduce((sum, hole) => sum + hole.par, 0)}
                             </span>
                           </span>
-                          <span className="text-gray-600 dark:text-gray-400">
+                          <span className="text-gray-700 dark:text-gray-300">
                             Total: <span className="font-semibold text-gray-900 dark:text-white">
                               {course.Hole.reduce((sum, hole) => sum + (hole.yardage || 0), 0).toLocaleString()} yds
                             </span>
@@ -900,16 +915,16 @@ export default function CoursesPage() {
                         </div>
                       )}
                       {((course as any).rating || (course as any).slope) && (
-                        <div className="flex flex-wrap gap-3 text-sm pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex flex-wrap gap-3 text-sm pt-2 border-t border-gray-200 dark:border-green-800/30">
                           {(course as any).rating && (
-                            <span className="text-gray-600 dark:text-gray-400">
+                            <span className="text-gray-700 dark:text-gray-300">
                               Rating: <span className="font-semibold text-gray-900 dark:text-white">
                                 {(course as any).rating.toFixed(1)}
                               </span>
                             </span>
                           )}
                           {(course as any).slope && (
-                            <span className="text-gray-600 dark:text-gray-400">
+                            <span className="text-gray-700 dark:text-gray-300">
                               Slope: <span className="font-semibold text-gray-900 dark:text-white">
                                 {(course as any).slope}
                               </span>

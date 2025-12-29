@@ -77,7 +77,7 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="mt-4 text-gray-700 dark:text-gray-300">Loading...</p>
         </div>
       </div>
     )
@@ -89,28 +89,28 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Redirecting to login...</p>
+          <p className="mt-4 text-gray-700 dark:text-gray-300">Redirecting to login...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
         <div className="text-center mb-12">
-          <h1 className="text-6xl md:text-7xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4 sm:mb-6">
             Golf Budz
           </h1>
-          <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-6 sm:mb-8 max-w-3xl mx-auto px-2">
             Welcome back, {user?.name}! Track your golf rounds and scores in real-time.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           <Link
             href="/courses"
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+            className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30 hover:scale-105 active:scale-95 card-mobile"
           >
             <div className="text-4xl mb-4">🏌️</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -126,7 +126,7 @@ export default function Home() {
 
           <Link
             href="/rounds"
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+            className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30 hover:scale-105"
           >
             <div className="text-4xl mb-4">📊</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -142,7 +142,7 @@ export default function Home() {
 
           <Link
             href="/rounds/new"
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+            className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30 hover:scale-105"
           >
             <div className="text-4xl mb-4">➕</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -158,7 +158,7 @@ export default function Home() {
 
           <Link
             href="/statistics"
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+            className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30 hover:scale-105"
           >
             <div className="text-4xl mb-4">📈</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -174,7 +174,7 @@ export default function Home() {
 
           <Link
             href="/team"
-            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+            className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30 hover:scale-105"
           >
             <div className="text-4xl mb-4">👥</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -185,6 +185,22 @@ export default function Home() {
             </p>
             <span className="text-green-600 dark:text-green-400 font-semibold">
               View team →
+            </span>
+          </Link>
+
+          <Link
+            href="/news"
+            className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-green-800/30 hover:scale-105"
+          >
+            <div className="text-4xl mb-4">📰</div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Golf News
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Stay updated with the latest golf news, tournaments, and updates.
+            </p>
+            <span className="text-green-600 dark:text-green-400 font-semibold">
+              Read news →
             </span>
           </Link>
         </div>

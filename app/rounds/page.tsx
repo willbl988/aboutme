@@ -108,14 +108,14 @@ export default function RoundsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
@@ -127,7 +127,7 @@ export default function RoundsPage() {
               className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base transition-all ${
                 showActiveOnly
                   ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                  : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50'
+                  : 'bg-white/80 dark:bg-green-900/30 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-green-800/30'
               }`}
             >
               {showActiveOnly ? 'Show All Rounds' : 'Show Active Only'}
@@ -142,8 +142,8 @@ export default function RoundsPage() {
         </div>
 
         {rounds.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-gray-700/50">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center border border-gray-200/50 dark:border-green-800/30">
+            <p className="text-gray-700 dark:text-gray-300 text-lg">
               {showActiveOnly
                 ? 'No active rounds. Start a new round to begin tracking scores!'
                 : 'No rounds yet. Start your first round!'}
@@ -160,7 +160,7 @@ export default function RoundsPage() {
             {rounds.map((round) => (
               <div
                 key={round.id}
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all relative"
+                className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30 hover:shadow-xl transition-all relative"
               >
                 <div className="flex justify-between items-start mb-4">
                   <Link
@@ -172,7 +172,7 @@ export default function RoundsPage() {
                         {round.Course.name}
                       </h2>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        <p className="text-gray-700 dark:text-gray-300 text-sm">
                           {new Date(round.createdAt).toLocaleDateString()}
                         </p>
                         {round.mode && round.mode !== 'stroke' && (
@@ -202,7 +202,7 @@ export default function RoundsPage() {
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         round.status === 'active'
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                          : 'bg-gray-100 dark:bg-green-800/30 text-gray-800 dark:text-gray-300'
                       }`}
                     >
                       {round.status}
@@ -230,7 +230,7 @@ export default function RoundsPage() {
                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                                  {total || '-'}
                                </p>
-                               <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                               <p className="text-xs text-gray-600 dark:text-gray-300">Total</p>
                              </div>
                            )
                          })}
