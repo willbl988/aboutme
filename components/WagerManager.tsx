@@ -82,7 +82,7 @@ export default function WagerManager({ wagers, players, onChange }: WagerManager
                 key={key}
                 type="button"
                 onClick={() => addWager(key)}
-                className="px-3 py-2 text-xs sm:text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-500 transition text-left"
+                className="px-3 py-2 text-xs sm:text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-500 transition text-left text-gray-900 dark:text-white"
               >
                 {template.description}
               </button>
