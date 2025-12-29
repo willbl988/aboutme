@@ -53,6 +53,7 @@ export default function Navigation() {
     { href: '/', label: 'Home' },
     { href: '/courses', label: 'Courses' },
     { href: '/rounds', label: 'Rounds' },
+    { href: '/team', label: 'Team' },
     { href: '/statistics', label: 'Statistics' },
   ]
 

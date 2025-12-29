@@ -23,12 +23,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ users: [] })
     }
 
-    // Search users by name or email (case-insensitive)
+    // Get user's team members
+    const team = await prisma.team.findUnique({
+      where: { ownerId: user.id },
+      include: {
+        Members: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    })
+
+    // Only search within team members
+    const teamMemberIds = team?.Members.map(m => m.userId) || []
+
+    if (teamMemberIds.length === 0) {
+      // No team members, return empty
+      return NextResponse.json({ users: [] })
+    }
+
+    // Search users by name or email (case-insensitive) but only from team
     const users = await prisma.user.findMany({
       where: {
-        OR: [
-          { name: { contains: query.trim(), mode: 'insensitive' } },
-          { email: { contains: query.trim(), mode: 'insensitive' } },
+        AND: [
+          {
+            OR: [
+              { name: { contains: query.trim(), mode: 'insensitive' } },
+              { email: { contains: query.trim(), mode: 'insensitive' } },
+            ],
+          },
+          {
+            id: {
+              in: teamMemberIds,
+            },
+          },
         ],
       },
       select: {

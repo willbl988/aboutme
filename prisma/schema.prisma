@@ -108,4 +108,31 @@ model User {
   Round       Round[]
   Session     Session[]
   RoundPlayer RoundPlayer[]
+  Team        Team[]        @relation("TeamOwner")
+  TeamMember  TeamMember[]
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  ownerId   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  Owner     User         @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  Members   TeamMember[]
+
+  @@unique([ownerId])
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  createdAt DateTime @default(now())
+  Team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
 }

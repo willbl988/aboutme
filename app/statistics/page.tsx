@@ -37,9 +37,17 @@ interface Statistics {
   }>
 }
 
+interface WagerStats {
+  totalBet: number
+  totalWon: number
+  totalLost: number
+  netAmount: number
+}
+
 export default function StatisticsPage() {
   const router = useRouter()
   const [stats, setStats] = useState<Statistics | null>(null)
+  const [wagerStats, setWagerStats] = useState<WagerStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -64,11 +72,24 @@ export default function StatisticsPage() {
 
   const loadStatistics = async () => {
     try {
-      const response = await fetch('/api/statistics', {
-        credentials: 'include',
-      })
-      const data = await response.json()
-      setStats(data)
+      const [statsResponse, wagersResponse] = await Promise.all([
+        fetch('/api/statistics', {
+          credentials: 'include',
+        }),
+        fetch('/api/statistics/wagers', {
+          credentials: 'include',
+        }),
+      ])
+      
+      if (statsResponse.ok) {
+        const data = await statsResponse.json()
+        setStats(data)
+      }
+      
+      if (wagersResponse.ok) {
+        const wagerData = await wagersResponse.json()
+        setWagerStats(wagerData)
+      }
     } catch (error) {
       console.error('Failed to load statistics:', error)
     } finally {
@@ -165,6 +186,47 @@ export default function StatisticsPage() {
                 </Link>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Wager Statistics */}
+        {wagerStats && (
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💰 Wager Statistics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Bet</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  ${wagerStats.totalBet.toFixed(2)}
+                </div>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Won</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  ${wagerStats.totalWon.toFixed(2)}
+                </div>
+              </div>
+              <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Lost</div>
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  ${wagerStats.totalLost.toFixed(2)}
+                </div>
+              </div>
+              <div className={`rounded-lg p-4 ${
+                wagerStats.netAmount >= 0
+                  ? 'bg-green-50 dark:bg-green-900/20'
+                  : 'bg-red-50 dark:bg-red-900/20'
+              }`}>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Amount</div>
+                <div className={`text-2xl font-bold ${
+                  wagerStats.netAmount >= 0
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {wagerStats.netAmount >= 0 ? '+' : ''}${wagerStats.netAmount.toFixed(2)}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

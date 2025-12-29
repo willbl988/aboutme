@@ -168,6 +168,22 @@ export default function Home() {
               View stats →
             </span>
           </Link>
+
+          <Link
+            href="/team"
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-gray-200/50 dark:border-gray-700/50 hover:scale-105"
+          >
+            <div className="text-4xl mb-4">👥</div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Team
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Manage your team, view statistics, leaderboards, and activity.
+            </p>
+            <span className="text-green-600 dark:text-green-400 font-semibold">
+              View team →
+            </span>
+          </Link>
         </div>
       </div>
     </div>
