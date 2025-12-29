@@ -446,7 +446,7 @@ export default function TeamPage() {
                           <div className="font-medium text-gray-900 dark:text-white">{member.name}</div>
                           <div className="flex gap-4 text-sm text-gray-700 dark:text-gray-300">
                             <span>{member.roundsPlayed} rounds</span>
-                            <span>Avg: {member.averageScore > 0 ? member.averageScore : '-'}</span>
+                            <span>Avg: {member.averageScore !== null && member.averageScore > 0 ? member.averageScore : '-'}</span>
                             {member.bestScore && <span>Best: {member.bestScore}</span>}
                           </div>
                         </div>

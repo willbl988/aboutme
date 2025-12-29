@@ -139,13 +139,24 @@ export async function GET(request: NextRequest) {
     // Member statistics
     const memberStats = await Promise.all(
       uniqueMembers.map(async (member) => {
+        // Get rounds created by this member
         const memberRounds = rounds.filter(r => r.createdById === member.userId)
         const memberScores: number[] = []
         
         memberRounds.forEach(round => {
-          const player = round.RoundPlayer.find(p => p.userId === member.userId)
-          if (player) {
+          // Try to find player by userId first, then by name
+          let player = round.RoundPlayer.find(p => p.userId === member.userId)
+          
+          // If no match by userId, try matching by name (case-insensitive)
+          if (!player) {
+            player = round.RoundPlayer.find(p => 
+              p.name?.toLowerCase() === member.name.toLowerCase()
+            )
+          }
+          
+          if (player && player.Score.length > 0) {
             const total = player.Score.reduce((sum, score) => sum + score.score, 0)
+            // Only include scores > 0 (completed holes)
             if (total > 0) {
               memberScores.push(total)
             }
@@ -154,7 +165,7 @@ export async function GET(request: NextRequest) {
 
         const avgScore = memberScores.length > 0
           ? Math.round(memberScores.reduce((a, b) => a + b, 0) / memberScores.length)
-          : 0
+          : null
 
         const best = memberScores.length > 0 ? Math.min(...memberScores) : null
 
