@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import WagerManager from '@/components/WagerManager'
 import type { Wager } from '@/lib/wager-types'
 
@@ -291,6 +292,43 @@ function NewRoundContent() {
     )
   }
 
+  // Show prompt if no courses available
+  if (!loading && courses.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-8">
+            New Round
+          </h1>
+
+          <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-12 border border-gray-200/50 dark:border-green-800/30 text-center">
+            <div className="text-6xl mb-6">🏌️</div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              No Courses Available
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300 mb-8 text-lg">
+              You need to add or import a course before you can start a round.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/courses"
+                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
+              >
+                + Create Course
+              </Link>
+              <button
+                onClick={() => router.push('/courses')}
+                className="px-6 py-3 bg-white/80 dark:bg-green-900/30 text-gray-700 dark:text-gray-300 border-2 border-green-200 dark:border-green-700 rounded-xl font-semibold hover:bg-white dark:hover:bg-green-800/50 transition-all"
+              >
+                🌐 Import Course
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-green-950 dark:via-emerald-950 dark:to-teal-950">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -319,6 +357,27 @@ function NewRoundContent() {
                 </option>
               ))}
             </select>
+            {courses.length === 0 && (
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-300 mb-3">
+                  No courses available. Add or import a course to get started.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Link
+                    href="/courses"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all text-sm text-center"
+                  >
+                    + Create Course
+                  </Link>
+                  <button
+                    onClick={() => router.push('/courses')}
+                    className="px-4 py-2 bg-white dark:bg-green-900/30 text-gray-700 dark:text-gray-300 border border-green-200 dark:border-green-700 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-green-800/50 transition-all text-sm text-center w-full"
+                  >
+                    🌐 Import Course
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-green-800/30">
