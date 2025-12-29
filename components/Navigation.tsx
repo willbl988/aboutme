@@ -96,16 +96,18 @@ export default function Navigation() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
             {user && (
-              <span className="hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                 {user.name}
               </span>
             )}
-            <WeatherWidget />
+            <div className="hidden sm:block">
+              <WeatherWidget />
+            </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+              className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition whitespace-nowrap"
             >
               Logout
             </button>
