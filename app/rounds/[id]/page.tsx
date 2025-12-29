@@ -240,7 +240,7 @@ export default function RoundDetailPage() {
               {round.Course.name}
             </h1>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+              <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
                 {new Date(round.createdAt).toLocaleDateString()}
               </p>
               {round.mode && round.mode !== 'stroke' && (
@@ -277,7 +277,7 @@ export default function RoundDetailPage() {
               className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-center ${
                 round.status === 'active'
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                  : 'bg-gray-100 dark:bg-green-800/30 text-gray-800 dark:text-gray-300'
+                  : 'bg-white/50 dark:bg-green-800/30 text-gray-800 dark:text-gray-300'
               }`}
             >
               {round.status}
@@ -294,11 +294,11 @@ export default function RoundDetailPage() {
               const mulligansUsed = getMulligansUsed(player.id)
               const mulligansRemaining = getMulligansRemaining(player.id)
               return (
-                <div key={player.id} className="text-center p-4 bg-gray-50 dark:bg-green-800/30 rounded-lg">
+                <div key={player.id} className="text-center p-4 bg-white/50 dark:bg-green-800/30 rounded-lg">
                   <p className="font-semibold text-gray-900 dark:text-white mb-2">{player.name}</p>
                   <p className="text-3xl font-bold text-green-600 dark:text-green-400">{total || 0}</p>
                   {(player.mulligansAllowed || 0) > 0 && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    <p className="text-xs text-gray-700 dark:text-gray-300 mt-2">
                       Mulligans: {mulligansUsed}/{player.mulligansAllowed} used
                       {mulligansRemaining > 0 && (
                         <span className="text-green-600 dark:text-green-400"> ({mulligansRemaining} left)</span>
@@ -331,7 +331,7 @@ export default function RoundDetailPage() {
                             ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
                             : net.net < 0
                             ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                            : 'bg-gray-50 dark:bg-green-800/30 border-gray-200 dark:border-green-700'
+                            : 'bg-white/50 dark:bg-green-800/30 border-gray-200/50 dark:border-green-700'
                         }`}
                       >
                         <div className="flex justify-between items-center">
@@ -342,14 +342,14 @@ export default function RoundDetailPage() {
                                 ? 'text-green-600 dark:text-green-400'
                                 : net.net < 0
                                 ? 'text-red-600 dark:text-red-400'
-                                : 'text-gray-600 dark:text-gray-400'
+                                : 'text-gray-700 dark:text-gray-300'
                             }`}
                           >
                             {net.net > 0 ? '+' : ''}${net.net.toFixed(2)}
                           </span>
                         </div>
                         {net.breakdown.length > 0 && (
-                          <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                          <div className="mt-2 space-y-1 text-xs text-gray-700 dark:text-gray-300">
                             {net.breakdown.map((item: { to: string; amount: number; reason: string }, idx: number) => (
                               <div key={idx}>
                                 {item.amount > 0 ? (
@@ -375,7 +375,7 @@ export default function RoundDetailPage() {
                 {wagerResults.map((result) => (
                   <div
                     key={result.wagerId}
-                    className="bg-gray-50 dark:bg-green-800/30 rounded-lg p-4 border border-gray-200 dark:border-green-700"
+                    className="bg-white/50 dark:bg-green-800/30 rounded-lg p-4 border border-gray-200/50 dark:border-green-700"
                   >
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{result.wagerDescription}</h4>
                     {result.transactions.length > 0 ? (
@@ -386,7 +386,7 @@ export default function RoundDetailPage() {
                             <span className="font-medium text-green-600 dark:text-green-400">{transaction.amount}</span> to{' '}
                             <span className="font-medium">{transaction.to}</span>
                             {transaction.reason && (
-                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({transaction.reason})</span>
+                              <span className="ml-2 text-xs text-gray-600 dark:text-gray-400">({transaction.reason})</span>
                             )}
                           </div>
                         ))}
@@ -396,17 +396,17 @@ export default function RoundDetailPage() {
                         <p className="text-blue-600 dark:text-blue-400 font-medium mb-1">
                           ✓ Tie - No money owed
                         </p>
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-gray-700 dark:text-gray-300">
                           All participants tied with a score of {result.tieScore}. No wager payouts.
                         </p>
                         {result.tieParticipants && result.tieParticipants.length > 0 && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                             Tied players: {result.tieParticipants.join(', ')}
                           </p>
                         )}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">No transactions (incomplete scores)</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic">No transactions (incomplete scores)</p>
                     )}
                   </div>
                 ))}
@@ -416,7 +416,7 @@ export default function RoundDetailPage() {
         )}
 
         {/* Score Entry Table */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto">
+        <div className="bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-green-800/30 overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-green-800/30">
@@ -433,14 +433,14 @@ export default function RoundDetailPage() {
               {holes.map((hole) => (
                 <tr key={hole.number} className="border-b border-gray-100 dark:border-green-800/30">
                   <td className="py-4 px-4 font-medium text-gray-900 dark:text-white">{hole.number}</td>
-                  <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">{hole.par}</td>
+                  <td className="py-4 px-4 text-center text-gray-700 dark:text-gray-300">{hole.par}</td>
                   {round.RoundPlayer.map((player) => {
                     const currentScore = getPlayerScore(player.id, hole.number)
                     const usedMulligan = hasMulligan(player.id, hole.number)
                     const canUseMulligan = (player.mulligansAllowed || 0) > 0 && getMulligansRemaining(player.id) > 0 && !usedMulligan
                     return (
                       <td key={player.id} className="py-4 px-4">
-                        <div className="flex flex-col items-center gap-2">
+                        <div className="flex flex-col items-center gap-2 min-h-[80px] justify-start">
                           <input
                             type="number"
                             min="1"
@@ -453,19 +453,19 @@ export default function RoundDetailPage() {
                               }
                             }}
                             disabled={round.status === 'completed'}
-                            className="w-16 px-2 py-1 border border-gray-300 dark:border-green-700 rounded text-center focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-green-900/20 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-16 px-2 py-1 border-2 border-green-200 dark:border-green-700 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-green-900/20 text-gray-900 dark:text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                             placeholder="-"
                           />
                           {(player.mulligansAllowed || 0) > 0 && (
                             <button
                               onClick={() => toggleMulligan(player.id, hole.number)}
                               disabled={round.status === 'completed' || (!canUseMulligan && !usedMulligan)}
-                              className={`text-xs px-2 py-1 rounded transition-all ${
+                              className={`text-xs px-3 py-1.5 rounded-lg transition-all font-medium min-w-[80px] ${
                                 usedMulligan
-                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-semibold'
+                                  ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 font-semibold border border-green-300 dark:border-green-700'
                                   : canUseMulligan
-                                  ? 'bg-gray-100 dark:bg-green-800/30 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-green-800/50'
-                                  : 'bg-gray-50 dark:bg-green-900/20 text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                  ? 'bg-white dark:bg-green-900/30 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-800/50 border border-gray-200 dark:border-green-700'
+                                  : 'bg-white/50 dark:bg-green-900/20 text-gray-600 dark:text-gray-400 cursor-not-allowed border border-gray-200/50 dark:border-green-800/30'
                               } disabled:opacity-50 disabled:cursor-not-allowed`}
                               title={usedMulligan ? 'Mulligan used - click to remove' : canUseMulligan ? 'Click to use mulligan' : 'No mulligans remaining'}
                             >
@@ -479,9 +479,9 @@ export default function RoundDetailPage() {
                 </tr>
               ))}
               {/* Totals Row */}
-              <tr className="bg-gray-50 dark:bg-green-800/30 font-bold">
+              <tr className="bg-white/50 dark:bg-green-800/30 font-bold">
                 <td className="py-4 px-4 text-gray-900 dark:text-white">Total</td>
-                <td className="py-4 px-4 text-center text-gray-600 dark:text-gray-400">
+                <td className="py-4 px-4 text-center text-gray-700 dark:text-gray-300">
                   {holes.reduce((sum, h) => sum + h.par, 0)}
                 </td>
                 {round.RoundPlayer.map((player) => {
@@ -498,7 +498,7 @@ export default function RoundDetailPage() {
         </div>
 
         {round.status === 'active' && (
-          <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 text-center text-sm text-gray-700 dark:text-gray-300">
             <p>💡 Scores update automatically for all players in real-time</p>
           </div>
         )}

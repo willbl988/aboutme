@@ -284,9 +284,20 @@ export async function deleteCourse(id: string): Promise<boolean> {
 }
 
 // Round functions
-export async function getRounds(activeOnly: boolean = false): Promise<RoundWithDetails[]> {
+export async function getRounds(activeOnly: boolean = false, userId?: string): Promise<RoundWithDetails[]> {
+  const where: any = {}
+  
+  if (activeOnly) {
+    where.status = 'active'
+  }
+  
+  // Filter by user if userId is provided
+  if (userId) {
+    where.createdById = userId
+  }
+  
   return prisma.round.findMany({
-    where: activeOnly ? { status: 'active' } : undefined,
+    where: Object.keys(where).length > 0 ? where : undefined,
     include: {
       Course: {
         include: {

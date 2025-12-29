@@ -4,18 +4,61 @@ import { getUserBySession } from '@/lib/auth-db'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const sessionId = request.cookies.get('session')?.value
+    if (!sessionId) {
+      console.log('[GET /api/courses] No session cookie found')
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const user = await getUserBySession(sessionId)
+    if (!user) {
+      console.log('[GET /api/courses] Invalid session')
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
     const searchQuery = searchParams.get('q') || undefined
     console.log(`[GET /api/courses] Search query from params: "${searchQuery}"`)
     
-    const courses = await getCourses(searchQuery)
-    console.log(`[GET /api/courses] Returning ${courses.length} courses`)
-    
-    return NextResponse.json({ courses })
-  } catch (error) {
-    console.error('Failed to get courses:', error)
+    try {
+      const courses = await getCourses(searchQuery)
+      console.log(`[GET /api/courses] Returning ${courses.length} courses`)
+      
+      return NextResponse.json({ courses })
+    } catch (dbError: any) {
+      console.error('[GET /api/courses] Database error:', dbError)
+      // Check for common database connection errors
+      if (dbError?.code === 'P1001' || dbError?.message?.includes('connect') || dbError?.message?.includes('timeout')) {
+        console.error('[GET /api/courses] Database connection error detected')
+        return NextResponse.json(
+          { 
+            error: 'Database connection error',
+            message: 'Unable to connect to database. Please try again later.',
+          },
+          { status: 503 }
+        )
+      }
+      throw dbError // Re-throw to be caught by outer catch
+    }
+  } catch (error: any) {
+    console.error('[GET /api/courses] Failed to get courses:', error)
+    console.error('[GET /api/courses] Error details:', {
+      message: error?.message,
+      code: error?.code,
+      stack: error?.stack,
+    })
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+      },
       { status: 500 }
     )
   }
