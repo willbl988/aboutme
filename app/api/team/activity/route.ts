@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       .filter((tm: any) => tm.Team.ownerId !== user.id)
       .map((tm: any) => tm.Team.ownerId)
     
-    const teamMemberIds = [...new Set([...directMemberIds, ...reverseMemberIds])]
+    const teamMemberIds = Array.from(new Set([...directMemberIds, ...reverseMemberIds]))
 
     if (teamMemberIds.length === 0) {
       return NextResponse.json({ activities: [] })
