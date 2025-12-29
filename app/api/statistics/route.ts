@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       include: {
         Course: {
           include: {
-            holes: {
+            Hole: {
               orderBy: { number: 'asc' },
             },
           },
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate statistics
     const totalRounds = rounds.length
-    const totalHoles = rounds.reduce((sum, round) => sum + (round.Course.holes.length || 18), 0)
+    const totalHoles = rounds.reduce((sum, round) => sum + (round.Course.Hole.length || 18), 0)
     
     // Calculate average scores per course
     const courseStats: Record<string, { rounds: number; totalScore: number; averageScore: number; bestScore: number; worstScore: number }> = {}
