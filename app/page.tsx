@@ -31,7 +31,10 @@ export default function Home() {
     // Redirect to login if no user after loading completes
     if (!loading && !user) {
       // Use router.push for better Next.js navigation
-      router.push('/login')
+      // Add a small delay to ensure the component has rendered
+      setTimeout(() => {
+        router.push('/login')
+      }, 100)
     }
   }, [loading, user, router])
 

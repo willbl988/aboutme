@@ -90,21 +90,30 @@ export default function CoursesPage() {
     } catch (error) {
       console.error('Auth check failed:', error)
       setLoading(false)
-      // Don't redirect on network errors - might be temporary
+      // On error, still try to redirect to login
+      router.push('/login')
     }
   }
 
   const loadCourses = async () => {
     try {
+      setLoading(true) // Ensure loading is set when starting
       const url = searchQuery && searchQuery.trim()
         ? `/api/courses?q=${encodeURIComponent(searchQuery.trim())}`
         : '/api/courses'
       console.log(`[loadCourses] Fetching from: ${url}, searchQuery: "${searchQuery}"`)
       
+      // Add timeout to prevent hanging
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
       const response = await fetch(url, {
         credentials: 'include',
         cache: 'no-store',
+        signal: controller.signal,
       })
+      
+      clearTimeout(timeoutId)
       
       if (!response.ok) {
         console.error(`[loadCourses] Failed with status: ${response.status}`)
@@ -116,8 +125,11 @@ export default function CoursesPage() {
       const data = await response.json()
       console.log(`[loadCourses] Received ${data.courses?.length || 0} courses`)
       setCourses(data.courses || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error('[loadCourses] Failed to load courses:', error)
+      if (error.name === 'AbortError') {
+        console.error('[loadCourses] Request timed out after 10 seconds')
+      }
       setCourses([])
     } finally {
       setLoading(false)
