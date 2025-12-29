@@ -96,6 +96,11 @@ export async function getRounds(activeOnly: boolean = false): Promise<RoundWithD
       RoundPlayer: {
         include: {
           Score: true,
+          Mulligan: {
+            select: {
+              holeNumber: true,
+            },
+          },
         },
       },
     },
