@@ -2,14 +2,14 @@ import { prisma } from './db'
 import type { Course, Hole, Round, RoundPlayer, Score } from '@prisma/client'
 
 export interface CourseWithHoles extends Course {
-  holes: Hole[]
+  Hole: Hole[]
 }
 
 export interface RoundWithDetails extends Round {
-  course: CourseWithHoles
-  players: (RoundPlayer & {
-    scores: Score[]
-    mulligans: { holeNumber: number }[]
+  Course: CourseWithHoles
+  RoundPlayer: (RoundPlayer & {
+    Score: Score[]
+    Mulligan: { holeNumber: number }[]
   })[]
 }
 
@@ -29,7 +29,7 @@ export interface HoleData {
 export async function getCourses(): Promise<CourseWithHoles[]> {
   return prisma.course.findMany({
     include: {
-      holes: {
+      Hole: {
         orderBy: { number: 'asc' },
       },
     },
@@ -41,7 +41,7 @@ export async function getCourse(id: string): Promise<CourseWithHoles | null> {
   return prisma.course.findUnique({
     where: { id },
     include: {
-      holes: {
+      Hole: {
         orderBy: { number: 'asc' },
       },
     },
@@ -52,7 +52,7 @@ export async function createCourse(name: string, holes: HoleData[]): Promise<Cou
   return prisma.course.create({
     data: {
       name,
-      holes: {
+      Hole: {
         create: holes.map((hole) => ({
           number: hole.number,
           par: hole.par,
@@ -61,7 +61,7 @@ export async function createCourse(name: string, holes: HoleData[]): Promise<Cou
       },
     },
     include: {
-      holes: {
+      Hole: {
         orderBy: { number: 'asc' },
       },
     },
@@ -86,16 +86,16 @@ export async function getRounds(activeOnly: boolean = false): Promise<RoundWithD
   return prisma.round.findMany({
     where: activeOnly ? { status: 'active' } : undefined,
     include: {
-      course: {
+      Course: {
         include: {
-          holes: {
+          Hole: {
             orderBy: { number: 'asc' },
           },
         },
       },
-      players: {
+      RoundPlayer: {
         include: {
-          scores: true,
+          Score: true,
         },
       },
     },
@@ -107,17 +107,17 @@ export async function getRound(id: string): Promise<RoundWithDetails | null> {
   return prisma.round.findUnique({
     where: { id },
     include: {
-      course: {
+      Course: {
         include: {
-          holes: {
+          Hole: {
             orderBy: { number: 'asc' },
           },
         },
       },
-      players: {
+      RoundPlayer: {
         include: {
-          scores: true,
-          mulligans: {
+          Score: true,
+          Mulligan: {
             select: {
               holeNumber: true,
             },
@@ -137,7 +137,7 @@ export async function createRound(
   const course = await prisma.course.findUnique({
     where: { id: courseId },
     include: {
-      holes: {
+      Hole: {
         orderBy: { number: 'asc' },
       },
     },
@@ -169,22 +169,22 @@ export async function createRound(
       courseId,
       createdById,
       status: 'active',
-      players: {
+      RoundPlayer: {
         create: playersData,
       },
     },
     include: {
-      course: {
+      Course: {
         include: {
-          holes: {
+          Hole: {
             orderBy: { number: 'asc' },
           },
         },
       },
-      players: {
+      RoundPlayer: {
         include: {
-          scores: true,
-          mulligans: {
+          Score: true,
+          Mulligan: {
             select: {
               holeNumber: true,
             },
