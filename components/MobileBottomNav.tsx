@@ -7,7 +7,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: '🏠' },
   { href: '/courses', label: 'Courses', icon: '🏌️' },
   { href: '/rounds', label: 'Rounds', icon: '📊' },
-  { href: '/tee-times', label: 'Tee Times', icon: '⛳' },
+  { href: '/tee-times', label: 'Tee', icon: '⛳' },
   { href: '/team', label: 'Team', icon: '👥' },
   { href: '/statistics', label: 'Stats', icon: '📈' },
   { href: '/news', label: 'News', icon: '📰' },
@@ -44,7 +44,7 @@ export default function MobileBottomNav() {
               }`}
             >
               <span className="text-xl mb-1">{item.icon}</span>
-              <span className={`text-xs font-medium ${active ? 'font-semibold' : ''}`}>
+              <span className={`text-xs font-medium ${active ? 'font-semibold' : ''} whitespace-nowrap`}>
                 {item.label}
               </span>
             </Link>
