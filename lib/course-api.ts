@@ -407,7 +407,7 @@ async function searchGolfCourseAPI(query: string, limit: number): Promise<Course
     console.log(`[searchGolfCourseAPI] Searching through ${allCourses.length} cached courses for: "${query}"`)
     
     // Log sample of cities in cache for debugging
-    const sampleCities = [...new Set(allCourses.map(c => c.city).filter(Boolean).slice(0, 20))]
+    const sampleCities = Array.from(new Set(allCourses.map(c => c.city).filter(Boolean).slice(0, 20)))
     console.log(`[searchGolfCourseAPI] Sample cities in cache:`, sampleCities.join(', '))
 
     // Client-side filtering: The API's search parameter doesn't work properly
