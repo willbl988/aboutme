@@ -44,7 +44,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 // Generate mock tee times for a course (for demo purposes)
 // In production, this would fetch from a real tee time API
 async function generateTeeTimesForCourse(courseId: string, startDate: Date, days: number = 7): Promise<void> {
-  const course = await prisma.course.findUnique({ where: { id: courseId } })
+  const course = await (prisma as any).course.findUnique({ where: { id: courseId } })
   if (!course) return
 
   const teeTimes: any[] = []
@@ -94,15 +94,15 @@ async function generateTeeTimesForCourse(courseId: string, startDate: Date, days
     const batch = teeTimes.slice(i, i + batchSize)
     await Promise.all(
       batch.map(async (teeTime) => {
-        const existing = await prisma.teeTime.findFirst({
-          where: {
-            courseId: teeTime.courseId,
-            date: teeTime.date,
-          },
-        })
+    const existing = await (prisma as any).teeTime.findFirst({
+      where: {
+        courseId: teeTime.courseId,
+        date: teeTime.date,
+      },
+    })
 
-        if (!existing) {
-          await prisma.teeTime.create({
+    if (!existing) {
+      await (prisma as any).teeTime.create({
             data: {
               courseId: teeTime.courseId,
               date: teeTime.date,
@@ -174,16 +174,16 @@ export async function searchTeeTimes(params: TeeTimeSearchParams): Promise<TeeTi
       }
     }
 
-    // Get courses
-    const courses = await prisma.course.findMany({
-      where: courseWhere,
-      include: {
-        TeeTimes: {
-          where: teeTimeWhere,
-          orderBy: { date: 'asc' },
-        },
+  // Get courses
+  const courses = await (prisma as any).course.findMany({
+    where: courseWhere,
+    include: {
+      TeeTimes: {
+        where: teeTimeWhere,
+        orderBy: { date: 'asc' },
       },
-    })
+    },
+  })
 
   // Generate tee times for courses that don't have any (for demo)
   for (const course of courses) {
@@ -194,7 +194,7 @@ export async function searchTeeTimes(params: TeeTimeSearchParams): Promise<TeeTi
   }
 
   // Re-fetch courses with generated tee times
-  const coursesWithTeeTimes = await prisma.course.findMany({
+  const coursesWithTeeTimes = await (prisma as any).course.findMany({
     where: courseWhere,
     include: {
       TeeTimes: {
@@ -216,13 +216,13 @@ export async function searchTeeTimes(params: TeeTimeSearchParams): Promise<TeeTi
 
     for (const teeTime of course.TeeTimes) {
       // Check available spots
-      const bookings = await prisma.teeTimeBooking.findMany({
+      const bookings = await (prisma as any).teeTimeBooking.findMany({
         where: {
           teeTimeId: teeTime.id,
           status: 'confirmed',
         },
       })
-      const bookedSpots = bookings.reduce((sum, booking) => sum + booking.players, 0)
+      const bookedSpots = bookings.reduce((sum: number, booking: any) => sum + booking.players, 0)
       const availableSpots = teeTime.players - bookedSpots
 
       if (availableSpots < players) continue
@@ -267,7 +267,27 @@ export async function searchTeeTimes(params: TeeTimeSearchParams): Promise<TeeTi
     })
   }
 
-  return results
+    return results
+  } catch (error: any) {
+    console.error('[searchTeeTimes] Error:', error)
+    console.error('[searchTeeTimes] Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+    })
+    
+    // Check if it's a table doesn't exist error
+    if (error?.message?.includes('does not exist') || 
+        error?.message?.includes('TeeTime') ||
+        error?.code === 'P2021' || 
+        error?.code === 'P2001' ||
+        error?.code === 'P2010') {
+      throw new Error('Database migration not applied. The TeeTime tables need to be created. Please run: npx prisma migrate deploy')
+    }
+    
+    // Re-throw with more context
+    throw new Error(`Failed to search tee times: ${error?.message || 'Unknown error'}`)
+  }
 }
 
 export async function bookTeeTime(
@@ -278,7 +298,7 @@ export async function bookTeeTime(
 ): Promise<{ success: boolean; bookingId?: string; error?: string }> {
   try {
     // Check if tee time exists and is available
-    const teeTime = await prisma.teeTime.findUnique({
+    const teeTime = await (prisma as any).teeTime.findUnique({
       where: { id: teeTimeId },
       include: {
         Bookings: {
@@ -296,7 +316,7 @@ export async function bookTeeTime(
     }
 
     // Check available spots
-    const bookedSpots = teeTime.Bookings.reduce((sum, booking) => sum + booking.players, 0)
+    const bookedSpots = teeTime.Bookings.reduce((sum: number, booking: any) => sum + booking.players, 0)
     const availableSpots = teeTime.players - bookedSpots
 
     if (availableSpots < players) {
@@ -304,7 +324,7 @@ export async function bookTeeTime(
     }
 
     // Create booking
-    const booking = await prisma.teeTimeBooking.create({
+    const booking = await (prisma as any).teeTimeBooking.create({
       data: {
         teeTimeId,
         userId,
@@ -315,7 +335,7 @@ export async function bookTeeTime(
 
     // Update tee time status if fully booked
     if (availableSpots === players) {
-      await prisma.teeTime.update({
+      await (prisma as any).teeTime.update({
         where: { id: teeTimeId },
         data: { status: 'booked' },
       })
@@ -329,7 +349,7 @@ export async function bookTeeTime(
 }
 
 export async function getUserBookings(userId: string): Promise<any[]> {
-  const bookings = await prisma.teeTimeBooking.findMany({
+  const bookings = await (prisma as any).teeTimeBooking.findMany({
     where: {
       userId,
       status: 'confirmed',
@@ -346,7 +366,7 @@ export async function getUserBookings(userId: string): Promise<any[]> {
     },
   })
 
-  return bookings.map(booking => ({
+  return bookings.map((booking: any) => ({
     id: booking.id,
     courseName: booking.TeeTime.Course.name,
     courseAddress: booking.TeeTime.Course.address,
