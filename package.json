@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && (prisma migrate deploy || echo 'Migrations already applied or failed, continuing...') && next build",
+    "build": "prisma generate && next build",
+    "build:next": "next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
