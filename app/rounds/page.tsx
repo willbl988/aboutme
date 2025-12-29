@@ -29,7 +29,7 @@ export default function RoundsPage() {
   const router = useRouter()
   const [rounds, setRounds] = useState<Round[]>([])
   const [loading, setLoading] = useState(true)
-  const [showActiveOnly, setShowActiveOnly] = useState(true)
+  const [showActiveOnly, setShowActiveOnly] = useState(false)
   const [deletingRoundId, setDeletingRoundId] = useState<string | null>(null)
 
   useEffect(() => {
