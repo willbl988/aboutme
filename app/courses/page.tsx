@@ -227,7 +227,7 @@ export default function CoursesPage() {
               }}
               className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-all text-sm sm:text-base w-full sm:w-auto"
             >
-              {showApiSearch ? 'Cancel' : '🔍 Search Courses'}
+              {showApiSearch ? 'Cancel' : '🔍 Import Course'}
             </button>
             <button
               onClick={() => {
@@ -236,14 +236,20 @@ export default function CoursesPage() {
               }}
               className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl text-sm sm:text-base w-full sm:w-auto"
             >
-              {showForm ? 'Cancel' : '+ Add Course'}
+              {showForm ? 'Cancel' : '+ Create Course'}
             </button>
           </div>
         </div>
 
         {showApiSearch && (
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 mb-8 border border-gray-200/50 dark:border-gray-700/50">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Search Courses</h2>
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Import Course from Database</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Search external golf course databases to find and import courses with complete hole information. 
+                Imported courses will be added to your course list.
+              </p>
+            </div>
             <div className="space-y-4">
               <div className="flex gap-3">
                 <input
@@ -460,11 +466,19 @@ export default function CoursesPage() {
 
         <>
           <div className="mb-6">
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Search Your Courses
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Filter your existing courses by name, city, state, or address
+              </p>
+            </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search courses by name, city, state, or address..."
+              placeholder="Search your courses by name, city, state, or address..."
               className="w-full md:w-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
