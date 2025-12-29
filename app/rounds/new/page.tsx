@@ -161,6 +161,9 @@ function NewRoundContent() {
       console.log('Creating round with:', {
         courseId: selectedCourse.id,
         players: validPlayers,
+        mode: gameMode,
+        wager: wager.trim() || null,
+        wagers: wagers.length > 0 ? wagers : null,
       })
 
       const response = await fetch('/api/rounds', {
@@ -172,6 +175,7 @@ function NewRoundContent() {
           players: validPlayers,
           mode: gameMode,
           wager: wager.trim() || null,
+          wagers: wagers.length > 0 ? wagers : null,
         }),
       })
 

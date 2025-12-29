@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import type { Wager } from '@/lib/wager-types'
+import { calculateWagerResults, calculateNetAmounts } from '@/lib/wager-calculator'
 
 interface Round {
   id: string
@@ -210,6 +211,26 @@ export default function RoundDetailPage() {
 
   const holes = round?.Course.Hole || Array.from({ length: 18 }, (_, i) => ({ number: i + 1, par: 4 }))
 
+  // Calculate wager results
+  const wagerResults = useMemo(() => {
+    if (!round?.wagers || round.wagers.length === 0) return []
+    try {
+      return calculateWagerResults(
+        round.wagers as Wager[],
+        round.RoundPlayer,
+        holes
+      )
+    } catch (error) {
+      console.error('Error calculating wager results:', error)
+      return []
+    }
+  }, [round?.wagers, round?.RoundPlayer, holes])
+
+  const netAmounts = useMemo(() => {
+    if (wagerResults.length === 0) return new Map()
+    return calculateNetAmounts(wagerResults)
+  }, [wagerResults])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
@@ -289,6 +310,96 @@ export default function RoundDetailPage() {
             })}
           </div>
         </div>
+
+        {/* Wager Results - Who Owes Who */}
+        {wagerResults.length > 0 && (
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-8 border border-gray-200/50 dark:border-gray-700/50">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">💰 Wager Results</h2>
+            
+            {/* Net Amounts Summary */}
+            {netAmounts.size > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Net Amounts</h3>
+                <div className="space-y-2">
+                  {Array.from(netAmounts.values())
+                    .sort((a, b) => b.net - a.net)
+                    .map((net) => (
+                      <div
+                        key={net.player}
+                        className={`p-3 rounded-lg border ${
+                          net.net > 0
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                            : net.net < 0
+                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-gray-900 dark:text-white">{net.player}</span>
+                          <span
+                            className={`text-lg font-bold ${
+                              net.net > 0
+                                ? 'text-green-600 dark:text-green-400'
+                                : net.net < 0
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-gray-600 dark:text-gray-400'
+                            }`}
+                          >
+                            {net.net > 0 ? '+' : ''}${net.net.toFixed(2)}
+                          </span>
+                        </div>
+                        {net.breakdown.length > 0 && (
+                          <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                            {net.breakdown.map((item, idx) => (
+                              <div key={idx}>
+                                {item.amount > 0 ? (
+                                  <span>Receives ${item.amount.toFixed(2)} from {item.to}</span>
+                                ) : (
+                                  <span>Owes ${Math.abs(item.amount).toFixed(2)} to {item.to}</span>
+                                )}
+                                {item.reason && <span className="ml-2 italic">({item.reason})</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Detailed Wager Breakdown */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Wager Breakdown</h3>
+              <div className="space-y-4">
+                {wagerResults.map((result) => (
+                  <div
+                    key={result.wagerId}
+                    className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+                  >
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{result.wagerDescription}</h4>
+                    {result.transactions.length > 0 ? (
+                      <div className="space-y-1 text-sm">
+                        {result.transactions.map((transaction, idx) => (
+                          <div key={idx} className="text-gray-700 dark:text-gray-300">
+                            <span className="font-medium">{transaction.from}</span> owes{' '}
+                            <span className="font-medium text-green-600 dark:text-green-400">{transaction.amount}</span> to{' '}
+                            <span className="font-medium">{transaction.to}</span>
+                            {transaction.reason && (
+                              <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({transaction.reason})</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">No transactions (ties or incomplete)</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Score Entry Table */}
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto">

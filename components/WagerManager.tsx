@@ -204,10 +204,10 @@ export default function WagerManager({ wagers, players, onChange }: WagerManager
                 </div>
               )}
 
-              {wager.type === 'side' && players.length > 0 && (
+              {players.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Participants (optional)
+                    Participants {wager.type === 'side' ? '(optional)' : ''}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {players.map((player) => (
@@ -228,6 +228,11 @@ export default function WagerManager({ wagers, players, onChange }: WagerManager
                       </label>
                     ))}
                   </div>
+                  {(!wager.participants || wager.participants.length === 0) && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      If no participants selected, all players are included
+                    </p>
+                  )}
                 </div>
               )}
 
