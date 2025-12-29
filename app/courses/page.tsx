@@ -137,13 +137,37 @@ export default function CoursesPage() {
 
     setApiSearchLoading(true)
     try {
-      const response = await fetch(`/api/courses/search?q=${encodeURIComponent(apiSearchQuery)}`, {
+      const url = `/api/courses/search?q=${encodeURIComponent(apiSearchQuery)}`
+      console.log('[searchApiCourses] Fetching from:', url)
+      
+      const response = await fetch(url, {
         credentials: 'include',
       })
+      
+      console.log('[searchApiCourses] Response status:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.error('[searchApiCourses] 404 - Route not found. Check if /api/courses/search/route.ts exists')
+          alert('Search endpoint not found. Please restart the dev server.')
+        } else if (response.status === 401) {
+          console.error('[searchApiCourses] 401 - Unauthorized')
+          alert('Please log in to search courses.')
+        } else {
+          const errorText = await response.text()
+          console.error('[searchApiCourses] Error response:', errorText)
+          alert(`Search failed: ${response.status} ${response.statusText}`)
+        }
+        setApiSearchResults([])
+        return
+      }
+      
       const data = await response.json()
+      console.log('[searchApiCourses] Received data:', data)
       setApiSearchResults(data.courses || [])
     } catch (error) {
-      console.error('Failed to search courses:', error)
+      console.error('[searchApiCourses] Failed to search courses:', error)
+      alert(`Search error: ${error instanceof Error ? error.message : 'Unknown error'}`)
       setApiSearchResults([])
     } finally {
       setApiSearchLoading(false)
