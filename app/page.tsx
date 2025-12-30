@@ -35,6 +35,7 @@ export default function Home() {
     updateTimeOfDay()
     const interval = setInterval(updateTimeOfDay, 60000) // Update every minute
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -278,7 +279,7 @@ export default function Home() {
           )}
 
           {/* Quick Links */}
-          <div className="space-y-4">
+          <div className="space-y-4" data-tutorial="quick-links">
             <Link
               href="/rounds"
               className="block bg-white/80 dark:bg-green-900/30 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200/50 dark:border-green-800/30 hover:shadow-xl transition-all active:scale-95"
