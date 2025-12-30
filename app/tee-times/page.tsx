@@ -74,13 +74,23 @@ export default function TeeTimesPage() {
         cache: 'no-store',
       })
       
-      if (!response.ok || !(await response.json()).user) {
+      if (!response.ok) {
+        setLoading(false)
         router.push('/login')
         return
       }
+      
+      const data = await response.json()
+      if (!data.user) {
+        setLoading(false)
+        router.push('/login')
+        return
+      }
+      
       setLoading(false)
     } catch (error) {
       console.error('Auth check failed:', error)
+      setLoading(false)
       router.push('/login')
     }
   }

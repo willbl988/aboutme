@@ -29,12 +29,20 @@ export default function NewsPage() {
     try {
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
+        cache: 'no-store',
       })
+      
+      if (!response.ok) {
+        router.push('/login')
+        return
+      }
+      
       const data = await response.json()
       if (!data.user) {
         router.push('/login')
       }
     } catch (error) {
+      console.error('Auth check failed:', error)
       router.push('/login')
     }
   }
