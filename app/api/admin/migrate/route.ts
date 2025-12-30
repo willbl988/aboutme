@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { execSync } from 'child_process'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 /**
  * Temporary migration endpoint
@@ -29,13 +32,20 @@ export async function POST(request: NextRequest) {
     // Note: Prisma Client is already generated during build, so we skip that step
     // Run migrations with timeout
     console.log('[Migration] Deploying migrations...')
-    const output = execSync('npx prisma migrate deploy', {
+    
+    // Use Promise.race to implement timeout
+    const migratePromise = execAsync('npx prisma migrate deploy', {
       encoding: 'utf-8',
-      stdio: 'pipe',
-      env: { ...process.env },
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      timeout: 120000 // 120 second timeout
+      env: { ...process.env }
     })
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Migration timed out after 120 seconds')), 120000)
+    )
+    
+    const { stdout, stderr } = await Promise.race([migratePromise, timeoutPromise]) as any
+    const output = stdout || stderr || ''
 
     console.log('[Migration] Migration output:', output)
 
