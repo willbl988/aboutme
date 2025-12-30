@@ -33,12 +33,13 @@ export async function POST(request: NextRequest) {
       env: { ...process.env }
     })
 
-    // Run migrations
+    // Run migrations with timeout
     console.log('[Migration] Deploying migrations...')
-    const output = execSync('npx prisma migrate deploy', {
+    const output = execSync('timeout 120 npx prisma migrate deploy || npx prisma migrate deploy', {
       encoding: 'utf-8',
       stdio: 'pipe',
-      env: { ...process.env }
+      env: { ...process.env },
+      maxBuffer: 10 * 1024 * 1024 // 10MB buffer
     })
 
     console.log('[Migration] Migration output:', output)

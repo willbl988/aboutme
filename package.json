@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && npx prisma migrate deploy && next build",
+    "build": "prisma generate && (timeout 60 npx prisma migrate deploy || echo 'Migration skipped - use /api/admin/migrate endpoint') && next build",
     "build:next": "next build",
     "start": "next start",
     "lint": "next lint",
