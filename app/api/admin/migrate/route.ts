@@ -26,20 +26,15 @@ export async function POST(request: NextRequest) {
 
     console.log('[Migration] Starting database migration...')
 
-    // Generate Prisma Client
-    console.log('[Migration] Generating Prisma Client...')
-    execSync('npx prisma generate', { 
-      stdio: 'inherit',
-      env: { ...process.env }
-    })
-
+    // Note: Prisma Client is already generated during build, so we skip that step
     // Run migrations with timeout
     console.log('[Migration] Deploying migrations...')
-    const output = execSync('timeout 120 npx prisma migrate deploy || npx prisma migrate deploy', {
+    const output = execSync('npx prisma migrate deploy', {
       encoding: 'utf-8',
       stdio: 'pipe',
       env: { ...process.env },
-      maxBuffer: 10 * 1024 * 1024 // 10MB buffer
+      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+      timeout: 120000 // 120 second timeout
     })
 
     console.log('[Migration] Migration output:', output)
