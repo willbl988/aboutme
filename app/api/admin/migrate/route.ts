@@ -33,12 +33,46 @@ export async function POST(request: NextRequest) {
     // Run migrations with timeout
     console.log('[Migration] Deploying migrations...')
     
-    // Use Promise.race to implement timeout
-    const migratePromise = execAsync('npx prisma migrate deploy', {
-      encoding: 'utf-8',
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      env: { ...process.env }
-    })
+    // Try multiple ways to run prisma migrate deploy
+    // In Vercel, we need to use the node_modules/.bin path or direct prisma command
+    const prismaCommands = [
+      './node_modules/.bin/prisma migrate deploy',
+      'node_modules/.bin/prisma migrate deploy',
+      'prisma migrate deploy',
+      'npx --yes prisma migrate deploy'
+    ]
+    
+    let output = ''
+    let lastError: any = null
+    
+    for (const cmd of prismaCommands) {
+      try {
+        console.log(`[Migration] Trying: ${cmd}`)
+        const migratePromise = execAsync(cmd, {
+          encoding: 'utf-8',
+          maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+          env: { ...process.env },
+          cwd: process.cwd()
+        })
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Migration timed out after 120 seconds')), 120000)
+        )
+        
+        const result = await Promise.race([migratePromise, timeoutPromise]) as any
+        output = result.stdout || result.stderr || ''
+        console.log(`[Migration] Success with: ${cmd}`)
+        break
+      } catch (error: any) {
+        lastError = error
+        console.log(`[Migration] Failed with ${cmd}:`, error.message)
+        continue
+      }
+    }
+    
+    if (!output && lastError) {
+      throw lastError
+    }
     
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Migration timed out after 120 seconds')), 120000)
